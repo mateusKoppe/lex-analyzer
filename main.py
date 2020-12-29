@@ -27,5 +27,7 @@ def convert_objects(lines: list) -> list:
         objects.append(generate_raw(line))
     return objects
 
-print(convert_objects(get_inputs()))
+objects = convert_objects(get_inputs())
+
+print("noice")
 
