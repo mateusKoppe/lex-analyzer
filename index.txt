@@ -1,5 +1,6 @@
 se
 entao
 senao
+
 <S> ::= a<A> | e<A> | i<A> | o<A> | u<A> | u<A>
 <A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε

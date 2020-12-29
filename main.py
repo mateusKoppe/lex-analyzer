@@ -1,7 +1,11 @@
-import re
-from models import Expression, Token
+from grammar import (
+    generate_grammar_sentence,
+    generate_grammar_expression,
+    is_expression,
+    is_sentence
+)
 
-def get_inputs() -> list:
+def get_inputs():
     lines = []
     while True:
         try:
@@ -11,23 +15,24 @@ def get_inputs() -> list:
             break
     return lines
 
-
-def generate_raw(raw: str) -> Expression:
-    match = re.search(Expression.regex, raw)
-    
-    if match:
-        return Expression(raw)
-    else:
-        return Token(raw)
-
-
-def convert_objects(lines: list) -> list:
-    objects = []
+def convert_objects(lines):
+    grammars = []
+    acc_lines = []
     for line in lines:
-        objects.append(generate_raw(line))
-    return objects
+        if is_expression(line):
+            acc_lines.append(line)
 
-objects = convert_objects(get_inputs())
+        elif len(acc_lines) and not line:
+            grammars.append(generate_grammar_expression(acc_lines))
+            acc_lines = []
 
-print("noice")
+        if line and is_sentence(line):
+            grammars.append(generate_grammar_sentence(line))
+        
+    if len(acc_lines):
+        grammars.append(generate_grammar_expression(acc_lines))
+        acc_lines = []
+    return grammars
+
+grammars = convert_objects(get_inputs())
 

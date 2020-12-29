@@ -1,18 +1,20 @@
 import unittest
 
 from grammar import (
-    generate_grammar_for_sentence,
-    generate_grammar,
+    generate_grammar_sentence,
+    generate_grammar_expression,
     get_non_terminals,
     generate_expression,
-    convert_non_terminals
+    convert_non_terminals,
+    is_expression,
+    is_sentence
 )
 
 
 class TestGrammar(unittest.TestCase):
     def test_by_sentence(self):
         self.assertEqual(
-            generate_grammar_for_sentence("se"),
+            generate_grammar_sentence("se"),
             {
                 1: [
                     ["s", 2],
@@ -26,7 +28,7 @@ class TestGrammar(unittest.TestCase):
         )
 
         self.assertEqual(
-            generate_grammar_for_sentence("se e"),
+            generate_grammar_sentence("se e"),
             {
                 1: [
                     ["s", 2],
@@ -47,7 +49,7 @@ class TestGrammar(unittest.TestCase):
 
     def test_generate_grammar(self):
         self.assertEqual(
-            generate_grammar([
+            generate_grammar_expression([
                 "<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>",
                 "<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε"
             ]),
@@ -95,7 +97,7 @@ class TestGrammar(unittest.TestCase):
                 "is_final": False
             }
         )
-    
+
     def test_convert_non_terminals(self):
         self.assertEqual(
             convert_non_terminals(
@@ -103,4 +105,26 @@ class TestGrammar(unittest.TestCase):
                 ["S", "A", "B", "C"]
             ),
             [["a", 2], ["e", 2], ["i", 3], ["o", 4]]
+        )
+
+    def test_is_expression(self):
+        self.assertEqual(
+            is_expression("<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>"),
+            True
+        )
+
+        self.assertEqual(
+            is_expression('brown'),
+            False
+        )
+
+    def test_is_sentence(self):
+        self.assertEqual(
+            is_sentence('brown'),
+            True
+        )
+
+        self.assertEqual(
+            is_sentence("<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>"),
+            False
         )

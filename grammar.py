@@ -4,7 +4,7 @@ gramar_regex = r"^<([A-Z]+)>\s*::=((\s*([a-zε]*)(<([A-Z])>)*([a-zε]*)\s*\|?)+)
 production_regex = r"^\s*([a-zε]*)(<([A-Z]+)>)*([a-zε]*)\s*$"
 
 
-def generate_grammar_for_sentence(word):
+def generate_grammar_sentence(word):
     grammar = {}
     for i, letter in enumerate(word):
         grammar[i + 1] = [[letter, i + 2]]
@@ -41,7 +41,7 @@ def convert_non_terminals(productions, non_terminals):
     return list(map(lambda p: [p[0], non_terminals.index(p[1]) + 1], productions))
 
 
-def generate_grammar(lines):
+def generate_grammar_expression(lines):
     non_terminals = get_non_terminals(lines)
     grammar = {}
     for line in lines:
@@ -55,3 +55,11 @@ def generate_grammar(lines):
             grammar["final"] = name_number
 
     return grammar
+
+
+def is_expression(raw):
+    return bool(re.match(gramar_regex, raw))      
+
+
+def is_sentence(raw):
+    return not is_expression(raw)
