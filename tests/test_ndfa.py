@@ -1,7 +1,7 @@
 import unittest
 
-from grammar import generate_grammar_expression, generate_grammar_sentence
-from non_deterministic_automaton import add_grammar, generate_NDFA
+from finite_automaton.grammar import generate_grammar_expression, generate_grammar_sentence
+from finite_automaton.ndfa import add_grammar, generate_NDFA
 
 
 class TestNDFA(unittest.TestCase):

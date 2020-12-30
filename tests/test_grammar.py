@@ -1,6 +1,6 @@
 import unittest
 
-from grammar import (
+from finite_automaton.grammar import (
     generate_grammar_sentence,
     generate_grammar_expression,
     get_non_terminals,
