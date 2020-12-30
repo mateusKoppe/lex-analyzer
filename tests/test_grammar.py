@@ -72,6 +72,32 @@ class TestGrammar(unittest.TestCase):
             }
         )
 
+    def test_generate_grammar_remove_useless(self):
+        self.assertEqual(
+            generate_grammar_expression([
+                "<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>",
+                "<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε",
+                "<B> ::= a<A> | e<A> | i<A> | o<A> | u<A>"
+            ]),
+            {
+                1: [
+                    ["a", 2],
+                    ["e", 2],
+                    ["i", 2],
+                    ["o", 2],
+                    ["u", 2],
+                ],
+                2: [
+                    ["a", 2],
+                    ["e", 2],
+                    ["i", 2],
+                    ["o", 2],
+                    ["u", 2]
+                ],
+                "final": 2
+            }
+        )
+
     def test_get_non_terminals(self):
         self.assertEqual(
             get_non_terminals([

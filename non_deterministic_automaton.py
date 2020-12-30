@@ -74,15 +74,16 @@ def NDFA_table(ndfa):
         row = []
         for column in header:
             if column == '/':
-                row.append(chr(index + 64) + (
+                row.append(
+                (chr(index + 63) if index != 1 else "S") + (
                     "*" if expression["is_final"] else ""
                 ))
                 continue
 
             try:
-                row.append(", ".join([chr(i + 64) for i in expression["productions"][column]]))
+                row.append(", ".join([chr(i + 63) for i in expression["productions"][column]]))
             except KeyError:
-                row.append('')
+                row.append('-')
         rows.append(row)
 
     return AsciiTable(rows).table

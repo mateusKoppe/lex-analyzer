@@ -54,7 +54,25 @@ def generate_grammar_expression(lines):
         if (expression["is_final"]):
             grammar["final"] = name_number
 
-    return grammar
+    filtered_grammar = {}
+    for index, production in grammar.items():
+        if index in ["final", 1]:
+            filtered_grammar[index] = production
+            continue
+
+        is_used = False
+        for i, p in grammar.items():
+            if i == "final":
+                continue
+            for terminals in p:
+                if index in terminals:
+                    is_used = True
+                    break
+        
+        if is_used:
+            filtered_grammar[index] = production
+
+    return filtered_grammar
 
 
 def is_expression(raw):
