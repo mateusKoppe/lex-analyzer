@@ -5,7 +5,28 @@ from finite_automaton.ndfa import add_grammar, generate_NDFA
 
 
 class TestNDFA(unittest.TestCase):
-    maxDiff = None
+    def setUp(self):
+        self.grammar_if = {
+            1: {"productions": {"i": [2]}, "is_final": False},
+            2: {"productions": {"f": [3]}, "is_final": False},
+            3: {"productions": {}, "is_final": True}
+        }
+        self.grammar_expression = {
+            1: {"productions": {
+                "a": [2],
+                "e": [2],
+                "i": [2],
+                "o": [2],
+                "u": [2],
+            }, "is_final": False},
+            2: {"productions": {
+                "a": [2],
+                "e": [2],
+                "i": [2],
+                "o": [2],
+                "u": [2]
+            }, "is_final": True}
+        }
 
     def test_add_grammar(self):
         self.assertEqual(
@@ -20,7 +41,7 @@ class TestNDFA(unittest.TestCase):
                     "productions": {},
                     "is_final": False
                 }
-            }, generate_grammar_sentence("if")),
+            }, self.grammar_if),
             {
                 1: {
                     "productions": {
@@ -46,7 +67,7 @@ class TestNDFA(unittest.TestCase):
 
     def test_add_grammar_empry(self):
         self.assertEqual(
-            add_grammar({}, generate_grammar_sentence("if")),
+            add_grammar({}, self.grammar_if),
             {
                 1: {
                     "productions": {
@@ -67,20 +88,10 @@ class TestNDFA(unittest.TestCase):
 
     def test_generate_NDFA_simple(self):
         self.assertEqual(
-            generate_NDFA([generate_grammar_sentence("if")]),
+            self.grammar_if,
             {
-                1: {
-                    "productions": {
-                        "i": [2]
-                    },
-                    "is_final": False
-                },
-                2: {
-                    "productions": {
-                        "f": [3]
-                    },
-                    "is_final": False
-                },
+                1: {"productions": {"i": [2]}, "is_final": False},
+                2: {"productions": {"f": [3]}, "is_final": False},
                 3: {"productions": {}, "is_final": True}
             }
         )
@@ -88,19 +99,15 @@ class TestNDFA(unittest.TestCase):
     def test_generate_NDFA(self):
         self.assertEqual(
             generate_NDFA([
-                generate_grammar_sentence("if"),
-                generate_grammar_expression([
-                    "<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>",
-                    "<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε"
-                ]),
-                generate_grammar_sentence("end")
+                self.grammar_if,
+                self.grammar_expression
             ]),
             {
                 1: {
                     "productions": {
                         "i": [2, 4],
                         "a": [4],
-                        "e": [4, 5],
+                        "e": [4],
                         "o": [4],
                         "u": [4]
                     },
@@ -123,18 +130,6 @@ class TestNDFA(unittest.TestCase):
                         "u": [4]
                     },
                     "is_final": True
-                },
-                5: {
-                    "productions": {"n": [6]},
-                    "is_final": False
-                },
-                6: {
-                    "productions": {"d": [7]},
-                    "is_final": False
-                },
-                7: {
-                    "productions": {},
-                    "is_final": True
-                },
+                }
             }
         )

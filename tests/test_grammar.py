@@ -7,43 +7,24 @@ from finite_automaton.grammar import (
     generate_expression,
     convert_non_terminals,
     is_expression,
-    is_sentence
+    is_sentence, remove_useless_expressions
 )
 
 
 class TestGrammar(unittest.TestCase):
     def test_by_sentence(self):
         self.assertEqual(
-            generate_grammar_sentence("se"),
+            generate_grammar_sentence("if"),
             {
-                1: [
-                    ["s", 2],
-                ],
-                2: [
-                    ["e", 3]
-                ],
-                3: [],
-                "final": 3
-            }
-        )
-
-        self.assertEqual(
-            generate_grammar_sentence("se e"),
-            {
-                1: [
-                    ["s", 2],
-                ],
-                2: [
-                    ["e", 3]
-                ],
-                3: [
-                    [" ", 4]
-                ],
-                4: [
-                    ["e", 5]
-                ],
-                5: [],
-                "final": 5
+                1: {
+                    "productions": {"i": [2]},
+                    "is_final": False
+                },
+                2: {
+                    "productions": {"f": [3]},
+                    "is_final": False
+                },
+                3: {"productions": {}, "is_final": True}
             }
         )
 
@@ -54,21 +35,84 @@ class TestGrammar(unittest.TestCase):
                 "<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε"
             ]),
             {
-                1: [
-                    ["a", 2],
-                    ["e", 2],
-                    ["i", 2],
-                    ["o", 2],
-                    ["u", 2],
-                ],
-                2: [
-                    ["a", 2],
-                    ["e", 2],
-                    ["i", 2],
-                    ["o", 2],
-                    ["u", 2]
-                ],
-                "final": 2
+                1: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2],
+                    },
+                    "is_final": False
+                },
+                2: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2]
+                    },
+                    "is_final": True
+                }
+            }
+        )
+
+    def test_remove_useless_expression(self):
+        self.assertEqual(
+            remove_useless_expressions({
+                1: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2],
+                    },
+                    "is_final": False
+                },
+                2: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2]
+                    },
+                    "is_final": True
+                },
+                3: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2]
+                    },
+                    "is_final": False
+                },
+            }),
+            {
+                1: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2],
+                    },
+                    "is_final": False
+                },
+                2: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2]
+                    },
+                    "is_final": True
+                }
             }
         )
 
@@ -80,21 +124,26 @@ class TestGrammar(unittest.TestCase):
                 "<B> ::= a<A> | e<A> | i<A> | o<A> | u<A>"
             ]),
             {
-                1: [
-                    ["a", 2],
-                    ["e", 2],
-                    ["i", 2],
-                    ["o", 2],
-                    ["u", 2],
-                ],
-                2: [
-                    ["a", 2],
-                    ["e", 2],
-                    ["i", 2],
-                    ["o", 2],
-                    ["u", 2]
-                ],
-                "final": 2
+                1: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2],
+                    },
+                    "is_final": False
+                },
+                2: {
+                    "productions": {
+                        "a": [2],
+                        "e": [2],
+                        "i": [2],
+                        "o": [2],
+                        "u": [2],
+                    },
+                    "is_final": True
+                }
             }
         )
 
@@ -111,7 +160,12 @@ class TestGrammar(unittest.TestCase):
         self.assertEqual(
             generate_expression("<S> ::= a<A> | e<A> | i<B> | o<C> | ε"),
             {
-                "productions": [["a", "A"], ["e", "A"], ["i", "B"], ["o", "C"]],
+                "productions": {
+                    "a": ["A"],
+                    "e": ["A"],
+                    "i": ["B"],
+                    "o": ["C"]
+                },
                 "is_final": True
             }
         )
@@ -119,7 +173,11 @@ class TestGrammar(unittest.TestCase):
         self.assertEqual(
             generate_expression("<S> ::= a<A> | e<A> | i<B>"),
             {
-                "productions": [["a", "A"], ["e", "A"], ["i", "B"]],
+                "productions": {
+                    "a": ["A"],
+                    "e": ["A"],
+                    "i": ["B"],
+                },
                 "is_final": False
             }
         )
@@ -127,10 +185,10 @@ class TestGrammar(unittest.TestCase):
     def test_convert_non_terminals(self):
         self.assertEqual(
             convert_non_terminals(
-                [["a", "A"], ["e", "A"], ["i", "B"], ["o", "C"]],
+                {"a": ["A"], "e": ["A"], "i": ["B"], "o": ["C"]},
                 ["S", "A", "B", "C"]
             ),
-            [["a", 2], ["e", 2], ["i", 3], ["o", 4]]
+            {"a": [2], "e": [2], "i": [3], "o": [4]}
         )
 
     def test_is_expression(self):

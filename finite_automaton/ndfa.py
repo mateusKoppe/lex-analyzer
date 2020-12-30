@@ -1,10 +1,8 @@
 from terminaltables import AsciiTable
 
-def add_grammar(_ndfa, _grammar):
-    ndfa = _ndfa.copy()
-    grammar = _grammar.copy()
-    final = grammar["final"]
-    del grammar["final"]
+def add_grammar(ndfa, grammar):
+    ndfa = ndfa.copy()
+    grammar = grammar.copy()
     first = grammar[1]
     del grammar[1]
 
@@ -14,40 +12,23 @@ def add_grammar(_ndfa, _grammar):
         shift = 0
 
     try:
-        ndfa[1]
-    except KeyError:
-        ndfa[1] = {
-            "productions": {},
-            "is_final": False
-        }
+        ndfa[1]["is_final"] |= first["is_final"]
 
-    for expression in first:
-        leter = expression[0]
-        non_terminal = expression[1]
-        try:
-            ndfa[1]["productions"][leter].append(non_terminal + shift)
-        except KeyError:
-            ndfa[1]["productions"][leter] = [non_terminal + shift]
-
-    try:
-        if (final == 1):
-            ndfa[1]["is_final"] = True
-    except KeyError:
-        pass
-
-    for index, expressions in grammar.items():
-        ndfa[index + shift] = {
-            "productions": {},
-            "is_final": final == index
-        }
-        for expression in expressions:
-            leter = expression[0]
-            non_terminal = expression[1]
+        for letter, non_terminals in first["productions"].items():
+            non_terminals = list(map(lambda x: x + shift, non_terminals))
+            productions = ndfa[1]["productions"]
             try:
-                ndfa[index +
-                     shift]["productions"][leter].append(non_terminal + shift)
+                productions[letter] = productions[letter] + non_terminals
             except KeyError:
-                ndfa[index + shift]["productions"][leter] = [non_terminal + shift]
+                productions[letter] = non_terminals
+    except KeyError:
+        ndfa[1] = first
+
+    for index, expression in grammar.items():
+        for letter, non_terminals in expression["productions"].items():
+            expression["productions"][letter] = list(
+                map(lambda x: x + shift, non_terminals))
+        ndfa[index + shift] = expression
 
     return ndfa
 
@@ -63,9 +44,9 @@ def generate_NDFA(grammars):
 def NDFA_table(ndfa):
     header = ['/']
     for index, expressions in ndfa.items():
-        for letter, non_terminals in expressions["productions"].items():
+        for letter in expressions["productions"].keys():
             try:
-                letterIndex = header.index(letter)
+                header.index(letter)
             except ValueError:
                 header.append(letter)
     rows = [header]

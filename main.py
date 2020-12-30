@@ -1,10 +1,10 @@
-from grammar import (
+from finite_automaton.grammar import (
     generate_grammar_sentence,
     generate_grammar_expression,
     is_expression,
     is_sentence
 )
-from non_deterministic_automaton import generate_NDFA, NDFA_table
+from finite_automaton.ndfa import generate_NDFA, NDFA_table
 
 
 def get_inputs():

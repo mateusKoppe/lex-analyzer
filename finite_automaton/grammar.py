@@ -7,9 +7,16 @@ production_regex = r"^\s*([a-zε]*)(<([A-Z]+)>)*([a-zε]*)\s*$"
 def generate_grammar_sentence(word):
     grammar = {}
     for i, letter in enumerate(word):
-        grammar[i + 1] = [[letter, i + 2]]
-    grammar[len(word)+1] = []
-    grammar["final"] = len(word)+1
+        grammar[i + 1] = {
+            "productions": {
+                letter: [i + 2]
+            },
+            "is_final": False
+        }
+    grammar[len(word)+1] = {
+        "productions": {},
+        "is_final": True
+    }
     return grammar
 
 
@@ -23,14 +30,17 @@ def get_non_terminals(lines):
 
 def generate_expression(line):
     productions_raw = re.search(gramar_regex, line).group(2).split("|")
-    productions = []
+    productions = {}
     is_final = False
     for raw in productions_raw:
         groups = re.search(production_regex, raw).groups()
         if (groups[0] == "ε"):
             is_final = True
             continue
-        productions.append([groups[0], groups[2]])
+        try:
+            productions[groups[0]].append(groups[2])
+        except KeyError:
+            productions[groups[0]] = [groups[2]]
     return {
         "productions": productions,
         "is_final": is_final
@@ -38,8 +48,32 @@ def generate_expression(line):
 
 
 def convert_non_terminals(productions, non_terminals):
-    return list(map(lambda p: [p[0], non_terminals.index(p[1]) + 1], productions))
+    productions = productions.copy()
+    for production, nterminals in productions.items():
+        productions[production] = list(
+            map(lambda nt: non_terminals.index(nt) + 1, nterminals))
+    return productions
 
+
+def remove_useless_expressions(grammar):
+    filtered_grammar = {}
+    used_expressions = [1]
+    for expression in grammar.values():
+        for non_terminals in expression["productions"].values():
+            for non_terminal in non_terminals:
+                try:
+                    used_expressions.index(non_terminal)
+                except ValueError:
+                    used_expressions.append(non_terminal)
+
+    for index, expression in grammar.items():
+        try:
+            used_expressions.index(index)
+            filtered_grammar[index] = expression
+        except ValueError:
+            continue
+
+    return filtered_grammar
 
 def generate_grammar_expression(lines):
     non_terminals = get_non_terminals(lines)
@@ -47,32 +81,14 @@ def generate_grammar_expression(lines):
     for line in lines:
         name = re.search(gramar_regex, line).group(1)
         expression = generate_expression(line)
-        formated_production = convert_non_terminals(
+        expression["productions"] = convert_non_terminals(
             expression["productions"], non_terminals)
         name_number = non_terminals.index(name)+1
-        grammar[name_number] = formated_production
-        if (expression["is_final"]):
-            grammar["final"] = name_number
+        grammar[name_number] = expression
 
-    filtered_grammar = {}
-    for index, production in grammar.items():
-        if index in ["final", 1]:
-            filtered_grammar[index] = production
-            continue
+    grammar = remove_useless_expressions(grammar)
 
-        is_used = False
-        for i, p in grammar.items():
-            if i == "final":
-                continue
-            for terminals in p:
-                if index in terminals:
-                    is_used = True
-                    break
-        
-        if is_used:
-            filtered_grammar[index] = production
-
-    return filtered_grammar
+    return grammar
 
 
 def is_expression(raw):
