@@ -7,7 +7,10 @@ from finite_automaton.grammar import (
     generate_expression,
     convert_non_terminals,
     is_expression,
-    is_sentence, remove_useless_expressions
+    is_sentence,
+    remove_useless_expressions,
+    get_alive_expressions,
+    remove_dead_expressions 
 )
 
 
@@ -144,6 +147,40 @@ class TestGrammar(unittest.TestCase):
                     },
                     "is_final": True
                 }
+            }
+        )
+
+    def test_get_alive_expressions(self):
+        self.assertEqual(
+            get_alive_expressions({
+                1: {'productions': {'a': [2], 'e': [2]}, 'is_final': False},
+                2: {'productions': {'a': [2], 'e': [3]}, 'is_final': True},
+                3: {'productions': {'a': [3], 'e': [3]}, 'is_final': False}
+            }),
+            set([2, 1])
+        )
+
+        self.assertEqual(
+            get_alive_expressions({
+                1: {'productions': {'a': [2], 'e': [4]}, 'is_final': False},
+                2: {'productions': {'a': [2], 'e': [3]}, 'is_final': True},
+                3: {'productions': {'a': [3], 'e': [3]}, 'is_final': False},
+                4: {'productions': {'a': [4], 'e': [3]}, 'is_final': False},
+                5: {'productions': {'a': [4], 'e': [1]}, 'is_final': False}
+            }),
+            set([2, 1, 5])
+        )
+
+    def test_generate_grammar_remove_deads(self):
+        self.assertEqual(
+            remove_dead_expressions({
+                1: {'productions': {'a': [2], 'e': [2]}, 'is_final': False},
+                2: {'productions': {'a': [2], 'e': [3]}, 'is_final': True},
+                3: {'productions': {'a': [3], 'e': [3]}, 'is_final': False}
+            }),
+            {
+                1: {'productions': {'a': [2], 'e': [2]}, 'is_final': False},
+                2: {'productions': {'a': [2]}, 'is_final': True}
             }
         )
 

@@ -75,6 +75,48 @@ def remove_useless_expressions(grammar):
 
     return filtered_grammar
 
+def get_alive_expressions(grammar):
+    ending_expressions = []
+    for index, expression in grammar.items():
+        if (expression["is_final"]):
+            ending_expressions.append(index)
+
+    new_ending_found = True
+    while (new_ending_found):
+        new_ending_found = False
+        for index, expression in grammar.items():
+            if (index in ending_expressions):
+                continue
+
+            for letter, non_terminals in expression["productions"].items():
+               intersection = set(ending_expressions) & set(non_terminals)
+               if len(intersection):
+                   ending_expressions.append(index)
+                   new_ending_fround = True
+
+    return set(ending_expressions)
+
+
+def remove_dead_expressions(grammar):
+    alive_expressions = get_alive_expressions(grammar)
+    filtered_grammar = {}
+
+    for index, expression in grammar.items():
+        if index not in alive_expressions:
+            continue
+        
+        productions = {}
+        for i, non_terminals in expression["productions"].items():
+            filtered = list(filter(lambda x: x in alive_expressions, non_terminals))
+            if len(filtered):
+                productions[i] = filtered
+        
+        expression["productions"] = productions
+        filtered_grammar[index] = expression
+
+    return filtered_grammar
+
+
 def generate_grammar_expression(lines):
     non_terminals = get_non_terminals(lines)
     grammar = {}
@@ -87,6 +129,7 @@ def generate_grammar_expression(lines):
         grammar[name_number] = expression
 
     grammar = remove_useless_expressions(grammar)
+    grammar = remove_dead_expressions(grammar)
 
     return grammar
 

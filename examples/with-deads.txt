@@ -1,0 +1,5 @@
+<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>
+<A> ::= a<A> | e<A> | i<A> | o<C> | u<B> | ε
+<B> ::= a<B> | e<B> 
+<C> ::= a<C> | e<C> | i<C> | o<C> | u<A>
+<D> ::= a<C> | e<C> | i<C> | o<C> | u<A>

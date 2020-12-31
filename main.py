@@ -40,5 +40,4 @@ def convert_objects(lines):
 
 grammars = convert_objects(get_inputs())
 
-import json
 print(NDFA_table(generate_NDFA(grammars)))
