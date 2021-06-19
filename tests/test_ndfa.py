@@ -1,6 +1,5 @@
 import unittest
 
-from finite_automaton.grammar import generate_grammar_expression, generate_grammar_sentence
 from finite_automaton.ndfa import add_grammar, generate_NDFA
 
 
