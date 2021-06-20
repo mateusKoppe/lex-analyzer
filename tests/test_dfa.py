@@ -48,18 +48,18 @@ class TestDFA(unittest.TestCase):
             [3, 2, 1]
          ), None) 
 
-    def test_eliminate_endeterminism(self):
+    def test_eliminate_indeterminism(self):
         self.assertEqual(eliminate_indeterminism({
             1: { "productions": { "i": {2, 1}, "a": {2} },
                 "is_final": False },
             2: { "productions": {"e": {2}},
                 "is_final": True },
         }), {
-            1: { "productions": { "i": 3, "a": 2 },
+            1: { "productions": { "i": {3}, "a": {2} },
                 "is_final": False },
-            2: { "productions": {"e": 2},
+            2: { "productions": {"e": {2}},
                 "is_final": True },
-            3: { "productions": { "a": 2, "e": 2, "i": 3 },
+            3: { "productions": { "a": {2}, "e": {2}, "i": {3} },
                 "is_final": True }
         })
 
@@ -71,15 +71,11 @@ class TestDFA(unittest.TestCase):
             3: { "productions": {},
                 "is_final": True },
         }), {
-            1: { "productions": { "a": 4, "b": 1 },
+            1: { "productions": { "a": {4}, "b": {1} },
                 "is_final": False },
-            2: { "productions": { "b": 3 },
+            4: { "productions": { "a": {4}, "b": {5} },
                 "is_final": False },
-            3: { "productions": {},
-                "is_final": True },
-            4: { "productions": { "a": 4, "b": 5 },
-                "is_final": False },
-            5: { "productions": { "a": 4, "b": 1 },
+            5: { "productions": { "a": {4}, "b": {1} },
                 "is_final": True }
         })
 

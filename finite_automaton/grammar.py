@@ -58,15 +58,21 @@ def convert_non_terminals(productions, non_terminals):
 def remove_useless_expressions(grammar):
     filtered_grammar = {}
     used_expressions = {1}
-    for expression in grammar.values():
+    original_values = grammar.values()
+
+    for expression in original_values:
         for non_terminals in expression["productions"].values():
             used_expressions = used_expressions.union(non_terminals)
 
     for index, expression in grammar.items():
         if index in used_expressions:
+            has_changed = True
             filtered_grammar[index] = expression
         else:
             continue
+
+    if len(original_values) != len(filtered_grammar.values()):
+        return remove_useless_expressions(filtered_grammar)
 
     return filtered_grammar
 
@@ -83,11 +89,11 @@ def get_alive_expressions(grammar):
             if (index in ending_expressions):
                 continue
 
-            for letter, non_terminals in expression["productions"].items():
+            for non_terminals in expression["productions"].values():
                intersection = set(ending_expressions) & set(non_terminals)
                if len(intersection):
                    ending_expressions.append(index)
-                   new_ending_fround = True
+                   new_ending_found = True
 
     return set(ending_expressions)
 

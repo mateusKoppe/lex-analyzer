@@ -88,12 +88,18 @@ class TestGrammar(unittest.TestCase):
                     "productions": {
                         "a": {2},
                         "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2}
+                        "i": {4},
+                        "o": {4},
+                        "u": {4}
                     },
                     "is_final": False
                 },
+                4: {
+                    "productions": {
+                        "a": {2},
+                    },
+                    "is_final": True
+                }
             }),
             {
                 1: {

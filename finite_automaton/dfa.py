@@ -1,3 +1,5 @@
+from finite_automaton.grammar import remove_useless_expressions
+
 def index_to_production_name(num):
     # Because S should be moved to the first index
     letters = ["S", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "T", "U", "V", "W", "Y", "Z"]
@@ -58,11 +60,11 @@ def eliminate_indeterminism(ndfa):
                 has_change = True
                 production_rule = search_production_rule(dfa, terminals)
                 if production_rule:
-                    dfa[key]["productions"][non_terminal] = [production_rule]
+                    dfa[key]["productions"][non_terminal] = {production_rule}
                 else:
                     last_key = sorted(dfa.keys()).pop() + 1
                     dfa[last_key] = merge_productions(dfa, terminals)
-                    dfa[key]["productions"][non_terminal] = [last_key]
+                    dfa[key]["productions"][non_terminal] = {last_key}
 
     if has_change:
         return eliminate_indeterminism(dfa)
@@ -72,10 +74,7 @@ def eliminate_indeterminism(ndfa):
         if dfa[key].get("from"):
             del dfa[key]["from"]
 
-        for non_terminal, terminals in items["productions"].items():
-            dfa[key]["productions"][non_terminal] = list(terminals)[0]
-
-    return dfa
+    return remove_useless_expressions(dfa)
 
 
 def generate_DFA(ndfa):
