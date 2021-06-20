@@ -7,11 +7,11 @@ class TestDFA(unittest.TestCase):
     def setUp(self):
         self.ndfa = {
             1: {
-                "productions": { "i": [2, 4], "a": [4], "e": [4] },
+                "productions": { "i": {2, 4}, "a": {4}, "e": {4} },
                 "is_final": False
             },
             2: {
-                "productions": {"f": [3]},
+                "productions": {"f": {3}},
                 "is_final": False
             },
             3: {
@@ -19,7 +19,7 @@ class TestDFA(unittest.TestCase):
                 "is_final": True
             },
             4: {
-                "productions": { "a": [4], "e": [4], "i": [4], "f": [2] },
+                "productions": { "a": {4}, "e": {4}, "i": {4}, "f": {2} },
                 "is_final": True
             }
         }
@@ -31,7 +31,7 @@ class TestDFA(unittest.TestCase):
         self.assertEqual(index_to_production_name(55), "AD")
 
     def test_merge_productions(self):
-        self.assertEqual(merge_productions(self.ndfa, [2, 4]), {
+        self.assertEqual(merge_productions(self.ndfa, {2, 4}), {
             "productions": {"f": {2, 3}, "a": {4}, "e": {4}, "i": {4}},
             "is_final": True,
             "from": {2, 4}
@@ -50,9 +50,9 @@ class TestDFA(unittest.TestCase):
 
     def test_eliminate_endeterminism(self):
         self.assertEqual(eliminate_indeterminism({
-            1: { "productions": { "i": [2, 1], "a": [2] },
+            1: { "productions": { "i": {2, 1}, "a": {2} },
                 "is_final": False },
-            2: { "productions": {"e": [2]},
+            2: { "productions": {"e": {2}},
                 "is_final": True },
         }), {
             1: { "productions": { "i": 3, "a": 2 },
@@ -64,9 +64,9 @@ class TestDFA(unittest.TestCase):
         })
 
         self.assertEqual(eliminate_indeterminism({
-            1: { "productions": { "a": [1, 2], "b": [1] },
+            1: { "productions": { "a": {1, 2}, "b": {1} },
                 "is_final": False },
-            2: { "productions": { "b": [3] },
+            2: { "productions": { "b": {3} },
                 "is_final": False },
             3: { "productions": {},
                 "is_final": True },

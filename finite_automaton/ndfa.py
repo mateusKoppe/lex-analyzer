@@ -15,10 +15,10 @@ def add_grammar(ndfa, grammar):
         ndfa[1]["is_final"] |= first["is_final"]
 
         for letter, non_terminals in first["productions"].items():
-            non_terminals = list(map(lambda x: x + shift, non_terminals))
+            non_terminals = set(map(lambda x: x + shift, non_terminals))
             productions = ndfa[1]["productions"]
             try:
-                productions[letter] = productions[letter] + non_terminals
+                productions[letter] = productions[letter].union(non_terminals)
             except KeyError:
                 productions[letter] = non_terminals
     except KeyError:
@@ -26,7 +26,7 @@ def add_grammar(ndfa, grammar):
 
     for index, expression in grammar.items():
         for letter, non_terminals in expression["productions"].items():
-            expression["productions"][letter] = list(
+            expression["productions"][letter] = set(
                 map(lambda x: x + shift, non_terminals))
         ndfa[index + shift] = expression
 

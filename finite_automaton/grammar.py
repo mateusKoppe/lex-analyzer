@@ -9,7 +9,7 @@ def generate_grammar_sentence(word):
     for i, letter in enumerate(word):
         grammar[i + 1] = {
             "productions": {
-                letter: [i + 2]
+                letter: {i + 2}
             },
             "is_final": False
         }
@@ -38,9 +38,9 @@ def generate_expression(line):
             is_final = True
             continue
         try:
-            productions[groups[0]].append(groups[2])
+            productions[groups[0]].add(groups[2])
         except KeyError:
-            productions[groups[0]] = [groups[2]]
+            productions[groups[0]] = {groups[2]}
     return {
         "productions": productions,
         "is_final": is_final
@@ -50,27 +50,22 @@ def generate_expression(line):
 def convert_non_terminals(productions, non_terminals):
     productions = productions.copy()
     for production, nterminals in productions.items():
-        productions[production] = list(
+        productions[production] = set(
             map(lambda nt: non_terminals.index(nt) + 1, nterminals))
     return productions
 
 
 def remove_useless_expressions(grammar):
     filtered_grammar = {}
-    used_expressions = [1]
+    used_expressions = {1}
     for expression in grammar.values():
         for non_terminals in expression["productions"].values():
-            for non_terminal in non_terminals:
-                try:
-                    used_expressions.index(non_terminal)
-                except ValueError:
-                    used_expressions.append(non_terminal)
+            used_expressions = used_expressions.union(non_terminals)
 
     for index, expression in grammar.items():
-        try:
-            used_expressions.index(index)
+        if index in used_expressions:
             filtered_grammar[index] = expression
-        except ValueError:
+        else:
             continue
 
     return filtered_grammar
@@ -107,7 +102,7 @@ def remove_dead_expressions(grammar):
         
         productions = {}
         for i, non_terminals in expression["productions"].items():
-            filtered = list(filter(lambda x: x in alive_expressions, non_terminals))
+            filtered = set(filter(lambda x: x in alive_expressions, non_terminals))
             if len(filtered):
                 productions[i] = filtered
         
