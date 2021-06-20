@@ -1,7 +1,8 @@
 
 import unittest
 
-from finite_automaton.dfa import eliminate_indeterminism, index_to_production_name, merge_productions, search_production_rule
+from finite_automaton.dfa import eliminate_indeterminism, index_to_production_name, merge_productions, search_production_rule, generate_DFA
+
 
 class TestDFA(unittest.TestCase):
     def setUp(self):
@@ -78,4 +79,22 @@ class TestDFA(unittest.TestCase):
             5: { "productions": { "a": {4}, "b": {1} },
                 "is_final": True }
         })
+
+    def test_generate_DFA(self):
+        self.assertEqual(generate_DFA({
+            1: { "productions": { "a": {1, 2}, "b": {1} },
+                "is_final": False },
+            2: { "productions": { "b": {3} },
+                "is_final": False },
+            3: { "productions": {},
+                "is_final": True },
+        }), {
+            "S": { "productions": { "a": "C", "b": "S" },
+                "is_final": False },
+            "C": { "productions": { "a": "C", "b": "D" },
+                "is_final": False },
+            "D": { "productions": { "a": "C", "b": "S" },
+                "is_final": True }
+        })
+
 

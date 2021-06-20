@@ -5,6 +5,7 @@ from finite_automaton.grammar import (
     is_sentence
 )
 from finite_automaton.ndfa import generate_NDFA, NDFA_table
+from finite_automaton.dfa import generate_DFA, DFA_table
 
 
 def get_inputs():
@@ -40,6 +41,11 @@ def convert_objects(lines):
 
 grammars = convert_objects(get_inputs())
 
-grammars = generate_NDFA(grammars)
+print("### NDFA ###")
+NDFA = generate_NDFA(grammars)
+print(NDFA_table(NDFA))
 
-print(NDFA_table(grammars))
+print()
+print("### DFA ###")
+DFA = generate_DFA(NDFA)
+print(DFA_table(DFA))

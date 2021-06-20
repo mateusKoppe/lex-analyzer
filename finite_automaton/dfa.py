@@ -1,3 +1,4 @@
+from terminaltables import AsciiTable
 from finite_automaton.grammar import remove_useless_expressions
 
 def index_to_production_name(num):
@@ -78,5 +79,39 @@ def eliminate_indeterminism(ndfa):
 
 
 def generate_DFA(ndfa):
-    formated = format_productions(ndfa)
-    return {}
+    dfa = eliminate_indeterminism(ndfa)
+    formated_dfa = {}
+    for key, expression in dfa.items():
+        formated_dfa[index_to_production_name(key)] = {
+            **expression,
+            "productions": {non_terminal: index_to_production_name(terminal.pop())
+                for non_terminal, terminal in expression["productions"].items()
+            }
+        }
+
+    return formated_dfa
+
+def DFA_table(dfa):
+    header = ['/']
+    for index, expressions in dfa.items():
+        for letter in expressions["productions"].keys():
+            try:
+                header.index(letter)
+            except ValueError:
+                header.append(letter)
+    rows = [header]
+
+    for index, expression in dfa.items():
+        row = []
+        for column in header:
+            if column == '/':
+                row.append(index + ("*" if expression["is_final"] else ""))
+                continue
+
+            try:
+                row.append(expression["productions"][column])
+            except KeyError:
+                row.append('-')
+        rows.append(row)
+
+    return AsciiTable(rows).table
