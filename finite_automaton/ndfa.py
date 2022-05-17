@@ -1,13 +1,11 @@
-from typing import Dict
+from collections import deque
+from typing import Dict, List
 import re
 from terminaltables import AsciiTable
 
 from finite_automaton.state import State
 
 class NDFA:
-    GRAMMAR_REGEX = r"^<([A-Z]+)>\s*::=((\s*([a-zε]*)(<([A-Z])>)*([a-zε]*)\s*\|?)+)$"
-    TOKEN_REGEX = r"^\s*([a-zε]*)(<([A-Z]+)>)*([a-zε]*)\s*$"
-
     @classmethod
     def from_token(cls, word: str):
         ndfa = cls()
@@ -28,128 +26,58 @@ class NDFA:
 
         return ndfa
 
-    @staticmethod
-    def from_grammar(lines):
-        non_terminals = NDFA.get_non_terminals(lines)
-        ndfa = NDFA()
-        for line in lines:
-            name = re.search(NDFA.GRAMMAR_REGEX, line).group(1)
-            expression = NDFA.generate_expression(line)
-            expression["productions"] = NDFA.convert_non_terminals(
-                expression["productions"], non_terminals)
-            name_number = non_terminals.index(name)+1
-            ndfa.states[name_number] = expression
+    @classmethod
+    def from_grammar(cls, lines: List[str]):
+        ndfa = cls()
+        
+        lines_deque = deque(lines)
 
-        ndfa.states = NDFA.remove_useless_expressions(ndfa.states)
-        ndfa.states = NDFA.remove_dead_expressions(ndfa.states)
+        initial_state = State.from_raw(lines_deque.popleft())
+        ndfa.start_grammar(initial_state)
+
+        for line in lines_deque:
+            state = State.from_raw(line)
+            ndfa.add_state(state)
+
+        ndfa.remove_endless_expressions()
 
         return ndfa
 
-    @staticmethod
-    def generate_expression(line):
-        productions_raw = re.search(NDFA.GRAMMAR_REGEX, line).group(2).split("|")
-        productions = {}
-        is_final = False
-        for raw in productions_raw:
-            groups = re.search(NDFA.TOKEN_REGEX, raw).groups()
-            if (groups[0] == "ε"):
-                is_final = True
-                continue
-            try:
-                productions[groups[0]].add(groups[2])
-            except KeyError:
-                productions[groups[0]] = {groups[2]}
-
-        return {
-            "productions": productions,
-            "is_final": is_final
-        }
-
-    @staticmethod
-    def get_non_terminals(lines):
-        non_terminals = []
-        for line in lines:
-            groups = re.search(NDFA.GRAMMAR_REGEX, line).groups()
-            non_terminals.append(groups[0])
-        return non_terminals
-
-    @staticmethod
-    def convert_non_terminals(productions, non_terminals):
-        productions = productions.copy()
-        for production, nterminals in productions.items():
-            productions[production] = set(
-                map(lambda nt: non_terminals.index(nt) + 1, nterminals))
-        return productions
-
-
-    @staticmethod
-    def remove_useless_expressions(grammar):
-        filtered_grammar = {}
-        used_expressions = {1}
-        original_values = grammar.values()
-
-        for expression in original_values:
-            for non_terminals in expression["productions"].values():
-                used_expressions = used_expressions.union(non_terminals)
-
-        for index, expression in grammar.items():
-            if index in used_expressions:
-                filtered_grammar[index] = expression
-            else:
-                continue
-
-        if len(original_values) != len(filtered_grammar.values()):
-            return NDFA.remove_useless_expressions(filtered_grammar)
-
-        return filtered_grammar
-
-    @staticmethod
-    def get_alive_expressions(grammar):
-        ending_expressions = []
-        for index, expression in grammar.items():
-            if (expression["is_final"]):
-                ending_expressions.append(index)
+    def get_ended_expressions(self):
+        ending_expressions = set([state.name for state in self.states.values() if state.is_final])
 
         new_ending_found = True
         while (new_ending_found):
             new_ending_found = False
-            for index, expression in grammar.items():
+            for index, state in self.states.items():
                 if (index in ending_expressions):
                     continue
 
-                for non_terminals in expression["productions"].values():
+                for non_terminals in state.transitions.values():
                     intersection = set(ending_expressions) & set(non_terminals)
                     if len(intersection):
-                        ending_expressions.append(index)
+                        ending_expressions.add(index)
                         new_ending_found = True
 
-        return set(ending_expressions)
+        return ending_expressions
 
 
-    @staticmethod
-    def remove_dead_expressions(grammar):
-        alive_expressions = NDFA.get_alive_expressions(grammar)
-        filtered_grammar = {}
+    def remove_endless_expressions(self):
+        states = set(self.states.keys())
+        dead_states = states - self.get_ended_expressions()
+        
+        for dead_state in dead_states:
+            self.forget_state(dead_state)
 
-        for index, expression in grammar.items():
-            if index not in alive_expressions:
-                continue
-            
-            productions = {}
-            for i, non_terminals in expression["productions"].items():
-                filtered = set(filter(lambda x: x in alive_expressions, non_terminals))
-                if len(filtered):
-                    productions[i] = filtered
-            
-            expression["productions"] = productions
-            filtered_grammar[index] = expression
-
-        return filtered_grammar
+    def forget_state(self, dead_state: str):
+        del self.states[dead_state]
+        for state in self.states.values():
+            state.forget_state(dead_state)
 
 
     @staticmethod
     def is_expression(raw):
-        return bool(re.match(NDFA.GRAMMAR_REGEX, raw))      
+        return bool(re.match(State.GRAMMAR_REGEX, raw))      
 
 
     @staticmethod
@@ -170,6 +98,9 @@ class NDFA:
             raise Exception(f"State {state.name} already exist")
 
         self.states[state.name] = state
+
+    def add_transition(self, from_state: str, to_state: str, terminal: str):
+        self.states[from_state].add_transition(terminal, to_state)
 
     def add_grammar(self, grammar):
         first = grammar[1]

@@ -1,6 +1,7 @@
 import unittest
 
 from finite_automaton.ndfa import NDFA
+from finite_automaton.state import State
 
 
 class TestNDFA(unittest.TestCase):
@@ -9,27 +10,11 @@ class TestNDFA(unittest.TestCase):
     def setUp(self):
         self.empty_ndfa = NDFA()
 
-        self.grammar_if = {
-            1: {"productions": {"i": {2}}, "is_final": False},
-            2: {"productions": {"f": {3}}, "is_final": False},
-            3: {"productions": {}, "is_final": True}
-        }
-        self.grammar_id = {
-            1: {"productions": {
-                "a": {2},
-                "e": {2},
-                "i": {2},
-                "o": {2},
-                "u": {2},
-            }, "is_final": False},
-            2: {"productions": {
-                "a": {2},
-                "e": {2},
-                "i": {2},
-                "o": {2},
-                "u": {2}
-            }, "is_final": True}
-        }
+        self.if_ndfa = NDFA.from_token("if")
+        self.id_ndfa = NDFA.from_grammar([
+            "<START> ::= a<ID> | e<ID> | u<ID>",
+            "<ID> ::= a<ID> | e<ID> | ε"
+        ])
 
     def test_from_token_else(self):
         ndfa = NDFA.from_token("else")
@@ -54,208 +39,47 @@ class TestNDFA(unittest.TestCase):
 
     def test_from_grammar(self):
         ndfa = NDFA.from_grammar([
-            "<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>",
-            "<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε"
+            "<START> ::= a<ID> | e<ID> | u<ID>",
+            "<ID> ::= a<ID> | e<ID> | ε"
         ])
-        self.assertEqual(
-            ndfa.states,
-            {
-                1: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2},
-                    },
-                    "is_final": False
-                },
-                2: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2}
-                    },
-                    "is_final": True
-                }
-            }
-        )
-
-    def test_get_non_terminals(self):
-        self.assertEqual(
-            NDFA.get_non_terminals([
-                "<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>",
-                "<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε"
-            ]),
-            ["S", "A"]
-        )
-
-    def test_remove_useless_expression(self):
-        self.assertEqual(
-            NDFA.remove_useless_expressions({
-                1: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2},
-                    },
-                    "is_final": False
-                },
-                2: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2}
-                    },
-                    "is_final": True
-                },
-                3: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {4},
-                        "o": {4},
-                        "u": {4}
-                    },
-                    "is_final": False
-                },
-                4: {
-                    "productions": {
-                        "a": {2},
-                    },
-                    "is_final": True
-                }
-            }),
-            {
-                1: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2},
-                    },
-                    "is_final": False
-                },
-                2: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2}
-                    },
-                    "is_final": True
-                }
-            }
-        )
-
-    def test_from_grammar(self):
-        self.assertEqual(
-            NDFA.from_grammar([
-                "<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>",
-                "<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> | ε",
-                "<B> ::= a<A> | e<A> | i<A> | o<A> | u<A>"
-            ]).states,
-            {
-                1: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2},
-                    },
-                    "is_final": False
-                },
-                2: {
-                    "productions": {
-                        "a": {2},
-                        "e": {2},
-                        "i": {2},
-                        "o": {2},
-                        "u": {2},
-                    },
-                    "is_final": True
-                }
-            }
-        )
-
-    def test_get_alive_expressions(self):
-        self.assertEqual(
-            NDFA.get_alive_expressions({
-                1: {'productions': {'a': {2}, 'e': {2}}, 'is_final': False},
-                2: {'productions': {'a': {2}, 'e': {3}}, 'is_final': True},
-                3: {'productions': {'a': {3}, 'e': {3}}, 'is_final': False}
-            }),
-            set([2, 1])
-        )
-
-        self.assertEqual(
-            NDFA.get_alive_expressions({
-                1: {'productions': {'a': {2}, 'e': {4}}, 'is_final': False},
-                2: {'productions': {'a': {2}, 'e': {3}}, 'is_final': True},
-                3: {'productions': {'a': {3}, 'e': {3}}, 'is_final': False},
-                4: {'productions': {'a': {4}, 'e': {3}}, 'is_final': False},
-                5: {'productions': {'a': {4}, 'e': {1}}, 'is_final': False}
-            }),
-            set([2, 1, 5])
-        )
-
-    def test_generate_grammar_remove_deads(self):
-        self.assertEqual(
-            NDFA.remove_dead_expressions({
-                1: {'productions': {'a': {2}, 'e': {2}}, 'is_final': False},
-                2: {'productions': {'a': {2}, 'e': {3}}, 'is_final': True},
-                3: {'productions': {'a': {3}, 'e': {3}}, 'is_final': False}
-            }),
-            {
-                1: {'productions': {'a': {2}, 'e': {2}}, 'is_final': False},
-                2: {'productions': {'a': {2}}, 'is_final': True}
-            }
-        )
 
 
-    def test_generate_expression(self):
-        self.assertEqual(
-            NDFA.generate_expression("<S> ::= a<A> | e<A> | i<B> | o<C> | ε"),
-            {
-                "productions": {
-                    "a": {"A"},
-                    "e": {"A"},
-                    "i": {"B"},
-                    "o": {"C"}
-                },
-                "is_final": True
-            }
-        )
+        self.assertFalse(ndfa.states["START"].is_final)
+        self.assertTrue(ndfa.states["ID"].is_final)
+
+        self.assertIn("ID", ndfa.states["START"].transitions["a"])
+        self.assertIn("ID", ndfa.states["START"].transitions["e"])
+        self.assertIn("ID", ndfa.states["START"].transitions["u"])
+        self.assertIn("ID", ndfa.states["ID"].transitions["a"])
+        self.assertIn("ID", ndfa.states["ID"].transitions["e"])
+        self.assertNotIn("u", ndfa.states["ID"].transitions)
 
         self.assertEqual(
-            NDFA.generate_expression("<S> ::= a<A> | e<A> | i<B>"),
-            {
-                "productions": {
-                    "a": {"A"},
-                    "e": {"A"},
-                    "i": {"B"},
-                },
-                "is_final": False
-            }
+            ndfa.initial_state,
+            ndfa.states["START"]
         )
 
-    def test_convert_non_terminals(self):
+    def test_get_ended_expressions(self):
+        dead_state = State("ENDLESS", False)
+
+        self.if_ndfa.add_state(dead_state)
+        self.if_ndfa.add_transition("IF", "ENDLESS", "f")
+
         self.assertEqual(
-            NDFA.convert_non_terminals(
-                {"a": {"A"}, "e": {"A"}, "i": {"B"}, "o": {"C"}},
-                ["S", "A", "B", "C"]
-            ),
-            {"a": {2}, "e": {2}, "i": {3}, "o": {4}}
+            self.if_ndfa.get_ended_expressions(),
+            { "START", "IF_1", "IF" }
         )
+
+    def test_remove_endless_expressions(self):
+        dead_state = State("ENDLESS", False)
+
+        self.if_ndfa.add_state(dead_state)
+        self.if_ndfa.add_transition("IF", "ENDLESS", "f")
+
+        self.if_ndfa.remove_endless_expressions()
+
+        self.assertNotIn("ENDLESS", self.if_ndfa.states)
+        self.assertNotIn("ENDLESS", self.if_ndfa.states["IF"].transitions["f"])
 
     def test_is_expression(self):
         self.assertEqual(
@@ -282,17 +106,7 @@ class TestNDFA(unittest.TestCase):
 
     def test_add_grammar_empty(self):
         ndfa = NDFA()
-
-        ndfa.add_grammar({
-            1: {"productions": {"i": {2}}, "is_final": False},
-            2: {"productions": {"f": {3}}, "is_final": False},
-            3: {"productions": {}, "is_final": True}
-        })
-        self.assertEqual(ndfa.states, {
-            1: {"productions": {"i": {2}}, "is_final": False},
-            2: {"productions": {"f": {3}}, "is_final": False},
-            3: {"productions": {}, "is_final": True}
-        })
+        ndfa.add_grammar(self.if_ndfa)
 
     def test_add_grammar(self):
         self.empty_ndfa.add_grammar({
