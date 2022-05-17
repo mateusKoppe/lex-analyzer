@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import deque
 from typing import Dict, List
 import re
@@ -6,6 +7,8 @@ from terminaltables import AsciiTable
 from finite_automaton.state import State
 
 class NDFA:
+    INITIAL_STATE = "START"
+
     @classmethod
     def from_token(cls, word: str):
         ndfa = cls()
@@ -89,7 +92,7 @@ class NDFA:
         self.states: Dict[str, State] = {} 
 
     def start_grammar(self, state: State):
-        state.name = "START"
+        state.name = NDFA.INITIAL_STATE
         self.add_state(state)
         self.initial_state = state
 
@@ -102,56 +105,36 @@ class NDFA:
     def add_transition(self, from_state: str, to_state: str, terminal: str):
         self.states[from_state].add_transition(terminal, to_state)
 
-    def add_grammar(self, grammar):
-        first = grammar[1]
-        del grammar[1]
+    def concat(self, ndfa: NDFA):
+        for state in ndfa.states.values():
+            if state.name == NDFA.INITIAL_STATE:
+                continue
 
-        try:
-            shift = sorted(self.states.keys()).pop() - 1
-        except IndexError:
-            shift = 0
-
-        try:
-            self.states[1]["is_final"] |= first["is_final"]
-
-            for letter, non_terminals in first["productions"].items():
-                non_terminals = set(map(lambda x: x + shift, non_terminals))
-                productions = self.states[1]["productions"]
-                try:
-                    productions[letter] = productions[letter].union(non_terminals)
-                except KeyError:
-                    productions[letter] = non_terminals
-        except KeyError:
-            self.states[1] = first
-
-        for index, expression in grammar.items():
-            for letter, non_terminals in expression["productions"].items():
-                expression["productions"][letter] = set(
-                    map(lambda x: x + shift, non_terminals))
-            self.states[index + shift] = expression
+            self.add_state(state.copy())
+        self.initial_state.concat(ndfa.initial_state)
 
     def asci_table(self):
         header = ['/']
-        for index, expressions in self.states.items():
-            for letter in expressions["productions"].keys():
+        for state in self.states.values():
+            for letter in state.transitions.keys():
                 try:
                     header.index(letter)
                 except ValueError:
                     header.append(letter)
         rows = [header]
 
-        for index, expression in self.states.items():
+        for state in self.states.values():
             row = []
             for column in header:
                 if column == '/':
                     row.append(
-                    (chr(index + 63) if index != 1 else "S") + (
-                        "*" if expression["is_final"] else ""
+                    state.name + (
+                        "*" if state.is_final else ""
                     ))
                     continue
 
                 try:
-                    row.append(", ".join([chr(i + 63) for i in expression["productions"][column]]))
+                    row.append(", ".join(state.transitions[column]))
                 except KeyError:
                     row.append('-')
             rows.append(row)

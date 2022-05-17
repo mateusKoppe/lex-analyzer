@@ -1,9 +1,11 @@
+from __future__ import annotations
+from os import stat
 from typing import Dict, Set
 import re
 
 class State:
-    GRAMMAR_REGEX = r"^<([A-Z]+)>\s*::=((\s*([a-zε]*)(<([A-Z]+)>)*([a-zε]*)\s*\|?)+)$"
-    TOKEN_REGEX = r"^\s*([a-zε]*)(<([A-Z]+)>)*([a-zε]*)\s*$"
+    GRAMMAR_REGEX = r"^<([A-Z_]+)>\s*::=((\s*([a-zε]*)(<([A-Z_]+)>)*([a-zε]*)\s*\|?)+)$"
+    TOKEN_REGEX = r"^\s*([a-zε]*)(<([A-Z_]+)>)*([a-zε]*)\s*$"
 
     @classmethod
     def from_raw(cls, line):
@@ -34,3 +36,22 @@ class State:
     def forget_state(self, state):
         for transition in self.transitions.values():
             transition.discard(state)
+
+    def concat(self, state: State):
+        if self.name != state.name:
+            raise Exception(f"Cannot concat state {self.name} with {state.name}, states need to have the same name.")
+
+        self.is_final |= state.is_final
+        for terminal, transition in state.transitions.items():
+            try:
+                self.transitions[terminal].update(transition)
+            except KeyError:
+                self.transitions[terminal] = transition.copy()
+
+    def copy(self) -> State:
+        new_state = State(self.name, self.is_final)
+        new_state.transitions = self.transitions.copy()
+        for terminal, transition in new_state.transitions.items():
+            new_state.transitions[terminal] = transition.copy()
+
+        return new_state
