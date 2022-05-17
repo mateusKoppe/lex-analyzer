@@ -1,28 +1,30 @@
-from terminaltables import AsciiTable
+from typing import Dict
 import re
+from terminaltables import AsciiTable
+
+from finite_automaton.state import State
 
 class NDFA:
     GRAMMAR_REGEX = r"^<([A-Z]+)>\s*::=((\s*([a-zε]*)(<([A-Z])>)*([a-zε]*)\s*\|?)+)$"
     TOKEN_REGEX = r"^\s*([a-zε]*)(<([A-Z]+)>)*([a-zε]*)\s*$"
 
-    def __init__(self):
-        self.states = {}
-    
+    @classmethod
+    def from_token(cls, word: str):
+        ndfa = cls()
+        
+        state_final = State(word.upper())
+        last_created_state = state_final
+        created = 1
+        for letter in reversed(word):
+            ndfa.add_state(last_created_state)
+            name = f"{word.upper()}_{len(word) - created}"
+            state = State(name, False)
+            state.add_transition(letter, last_created_state.name)
+            last_created_state = state
+            
+            created += 1
 
-    @staticmethod
-    def from_token(word):
-        ndfa = NDFA()
-        for i, letter in enumerate(word):
-            ndfa.states[i + 1] = {
-                "productions": {
-                    letter: {i + 2}
-                },
-                "is_final": False
-            }
-        ndfa.states[len(word)+1] = {
-            "productions": {},
-            "is_final": True
-        }
+        ndfa.start_grammar(last_created_state)
 
         return ndfa
 
@@ -153,6 +155,21 @@ class NDFA:
     @staticmethod
     def is_sentence(raw):
         return not NDFA.is_expression(raw)
+
+    def __init__(self):
+        self.initial_state = None
+        self.states: Dict[str, State] = {} 
+
+    def start_grammar(self, state: State):
+        state.name = "START"
+        self.add_state(state)
+        self.initial_state = state
+
+    def add_state(self, state: State):
+        if state.name in self.states:
+            raise Exception(f"State {state.name} already exist")
+
+        self.states[state.name] = state
 
     def add_grammar(self, grammar):
         first = grammar[1]

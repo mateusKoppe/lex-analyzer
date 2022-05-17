@@ -31,22 +31,26 @@ class TestNDFA(unittest.TestCase):
             }, "is_final": True}
         }
 
-    def test_from_token(self):
-        ndfa = NDFA.from_token("if")
+    def test_from_token_else(self):
+        ndfa = NDFA.from_token("else")
+
+        self.assertFalse(ndfa.states["START"].is_final)
+        self.assertFalse(ndfa.states["ELSE_1"].is_final)
+        self.assertFalse(ndfa.states["ELSE_2"].is_final)
+        self.assertFalse(ndfa.states["ELSE_3"].is_final)
+        self.assertTrue(ndfa.states["ELSE"].is_final)
+
+        self.assertIn("ELSE_1", ndfa.states["START"].transitions["e"])
+        self.assertIn("ELSE_2", ndfa.states["ELSE_1"].transitions["l"])
+        self.assertIn("ELSE_3", ndfa.states["ELSE_2"].transitions["s"])
+        self.assertIn("ELSE", ndfa.states["ELSE_3"].transitions["e"])
+
         self.assertEqual(
-            ndfa.states,
-            {
-                1: {
-                    "productions": {"i": {2}},
-                    "is_final": False
-                },
-                2: {
-                    "productions": {"f": {3}},
-                    "is_final": False
-                },
-                3: {"productions": {}, "is_final": True}
-            }
+            ndfa.initial_state,
+            ndfa.states["START"]
         )
+
+        self.assertEqual(ndfa.states["ELSE"].transitions, {})
 
     def test_from_grammar(self):
         ndfa = NDFA.from_grammar([

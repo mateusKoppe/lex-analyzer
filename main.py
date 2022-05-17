@@ -14,7 +14,7 @@ def get_inputs():
 
 
 def generate_ndfa(lines):
-    ndfa = NDFA()
+    ndfa = NDFA.empty_NDFA()
     acc_lines = []
     for line in lines:
         if NDFA.is_expression(line):
@@ -27,7 +27,7 @@ def generate_ndfa(lines):
             acc_lines = []
 
         if line and NDFA.is_sentence(line):
-            new_ndfa = NDFA.from_token(line)
+            new_ndfa = NDFA(line)
             ndfa.add_grammar(new_ndfa.states)
 
     if len(acc_lines):
