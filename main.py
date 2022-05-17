@@ -1,11 +1,5 @@
-from finite_automaton.grammar import (
-    generate_grammar_sentence,
-    generate_grammar_expression,
-    is_expression,
-    is_sentence
-)
-from finite_automaton.ndfa import generate_NDFA, NDFA_table
-from finite_automaton.dfa import generate_DFA, DFA_table
+from finite_automaton.ndfa import NDFA
+from finite_automaton.dfa import DFA
 
 
 def get_inputs():
@@ -19,33 +13,35 @@ def get_inputs():
     return lines
 
 
-def convert_objects(lines):
-    grammars = []
+def generate_ndfa(lines):
+    ndfa = NDFA()
     acc_lines = []
     for line in lines:
-        if is_expression(line):
+        if NDFA.is_expression(line):
             acc_lines.append(line)
 
         elif len(acc_lines) and not line:
-            grammars.append(generate_grammar_expression(acc_lines))
+            new_ndfa = NDFA.from_grammar(acc_lines)
+            ndfa.add_grammar(new_ndfa.states)
+            
             acc_lines = []
 
-        if line and is_sentence(line):
-            grammars.append(generate_grammar_sentence(line))
+        if line and NDFA.is_sentence(line):
+            new_ndfa = NDFA.from_token(line)
+            ndfa.add_grammar(new_ndfa.states)
 
     if len(acc_lines):
-        grammars.append(generate_grammar_expression(acc_lines))
-        acc_lines = []
-    return grammars
+        new_ndfa = NDFA.from_grammar(acc_lines)
+        ndfa.add_grammar(new_ndfa.states)
 
+    return ndfa
 
-grammars = convert_objects(get_inputs())
+ndfa = generate_ndfa(get_inputs())
 
 print("### NDFA ###")
-NDFA = generate_NDFA(grammars)
-print(NDFA_table(NDFA))
+print(ndfa.asci_table())
 
 print()
 print("### DFA ###")
-DFA = generate_DFA(NDFA)
-print(DFA_table(DFA))
+dfa = DFA.from_NDFA(ndfa)
+print(dfa.asci_table())
