@@ -1,4 +1,4 @@
-from finite_automaton.ndfa import NDFA
+from finite_automaton.nfa import NFA
 from finite_automaton.dfa import DFA
 
 
@@ -13,36 +13,36 @@ def get_inputs():
     return lines
 
 
-def generate_ndfa(lines):
-    ndfa = NDFA.from_token(lines[0])
+def generate_nfa(lines):
+    nfa = NFA.from_token(lines[0])
     del lines[0]
     acc_lines = []
     for line in lines:
-        if NDFA.is_expression(line):
+        if NFA.is_expression(line):
             acc_lines.append(line)
 
         elif len(acc_lines) and not line:
-            new_ndfa = NDFA.from_grammar(acc_lines)
-            ndfa.concat(new_ndfa)
+            new_nfa = NFA.from_grammar(acc_lines)
+            nfa.concat(new_nfa)
             
             acc_lines = []
 
-        if line and NDFA.is_sentence(line):
-            new_ndfa = NDFA.from_token(line)
-            ndfa.concat(new_ndfa)
+        if line and NFA.is_sentence(line):
+            new_nfa = NFA.from_token(line)
+            nfa.concat(new_nfa)
 
     if len(acc_lines):
-        new_ndfa = NDFA.from_grammar(acc_lines)
-        ndfa.concat(new_ndfa)
+        new_nfa = NFA.from_grammar(acc_lines)
+        nfa.concat(new_nfa)
 
-    return ndfa
+    return nfa
 
-ndfa = generate_ndfa(get_inputs())
+nfa = generate_nfa(get_inputs())
 
-print("### NDFA ###")
-print(ndfa.asci_table())
+print("### NFA ###")
+print(nfa.asci_table())
 
 # print()
 # print("### DFA ###")
-# dfa = DFA.from_NDFA(ndfa)
+# dfa = DFA.from_NFA(nfa)
 # print(dfa.asci_table())

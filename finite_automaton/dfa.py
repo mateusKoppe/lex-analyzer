@@ -1,12 +1,12 @@
 from terminaltables import AsciiTable
 
-from finite_automaton.ndfa import NDFA
+from finite_automaton.nfa import NFA
 
 class DFA:
     @staticmethod
-    def from_NDFA(ndfa):
+    def from_NFA(nfa):
         dfa = DFA()
-        states = DFA.eliminate_indeterminism(ndfa.states)
+        states = DFA.eliminate_indeterminism(nfa.states)
         for key, expression in states.items():
             dfa.states[DFA.index_to_production_name(key)] = {
                 **expression,
@@ -32,9 +32,9 @@ class DFA:
             return left + rigth_letter
 
     @staticmethod
-    def format_productions(ndfa):
+    def format_productions(nfa):
         dfa = {}
-        for index, item in ndfa.items():
+        for index, item in nfa.items():
             productions = dict(zip(
                 item["productions"].keys(),
                 list(map(
@@ -50,10 +50,10 @@ class DFA:
         return dfa
 
     @staticmethod
-    def merge_productions(ndfa, productions):
+    def merge_productions(nfa, productions):
         new_production = {"productions": {}, "is_final": False}
         for key in productions:
-            production = ndfa[key]
+            production = nfa[key]
             new_production["is_final"] |= production["is_final"]
             new_production["from"] = set(productions)
 
@@ -64,17 +64,17 @@ class DFA:
 
         return new_production
 
-    def search_production_rule(ndfa, productions):
-        for key, items in ndfa.items():
+    def search_production_rule(nfa, productions):
+        for key, items in nfa.items():
             if items.get("from", False) == set(productions):
                 return key
         return None
 
-    def eliminate_indeterminism(ndfa):
-        dfa = ndfa.copy()
+    def eliminate_indeterminism(nfa):
+        dfa = nfa.copy()
 
         has_change = False
-        for key, items in ndfa.items():
+        for key, items in nfa.items():
             for non_terminal, terminals in items["productions"].items():
                 if len(terminals) > 1:
                     has_change = True
@@ -90,12 +90,12 @@ class DFA:
             return DFA.eliminate_indeterminism(dfa)
 
 
-        for key, items in ndfa.items():
+        for key, items in nfa.items():
             if dfa[key].get("from"):
                 del dfa[key]["from"]
 
 
-        return NDFA.remove_useless_expressions(dfa)
+        return NFA.remove_useless_expressions(dfa)
 
     def __init__(self):
         self.states = {}

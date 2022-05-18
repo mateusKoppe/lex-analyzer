@@ -6,18 +6,18 @@ from terminaltables import AsciiTable
 
 from finite_automaton.state import State
 
-class NDFA:
+class NFA:
     INITIAL_STATE = "START"
 
     @classmethod
     def from_token(cls, word: str):
-        ndfa = cls()
+        nfa = cls()
         
         state_final = State(word.upper())
         last_created_state = state_final
         created = 1
         for letter in reversed(word):
-            ndfa.add_state(last_created_state)
+            nfa.add_state(last_created_state)
             name = f"{word.upper()}_{len(word) - created}"
             state = State(name, False)
             state.add_transition(letter, last_created_state.name)
@@ -25,26 +25,26 @@ class NDFA:
             
             created += 1
 
-        ndfa.start_grammar(last_created_state)
+        nfa.start_grammar(last_created_state)
 
-        return ndfa
+        return nfa
 
     @classmethod
     def from_grammar(cls, lines: List[str]):
-        ndfa = cls()
+        nfa = cls()
         
         lines_deque = deque(lines)
 
         initial_state = State.from_raw(lines_deque.popleft())
-        ndfa.start_grammar(initial_state)
+        nfa.start_grammar(initial_state)
 
         for line in lines_deque:
             state = State.from_raw(line)
-            ndfa.add_state(state)
+            nfa.add_state(state)
 
-        ndfa.remove_endless_expressions()
+        nfa.remove_endless_expressions()
 
-        return ndfa
+        return nfa
 
     def get_ended_expressions(self):
         ending_expressions = set([state.name for state in self.states.values() if state.is_final])
@@ -85,14 +85,14 @@ class NDFA:
 
     @staticmethod
     def is_sentence(raw):
-        return not NDFA.is_expression(raw)
+        return not NFA.is_expression(raw)
 
     def __init__(self):
         self.initial_state = None
         self.states: Dict[str, State] = {} 
 
     def start_grammar(self, state: State):
-        state.name = NDFA.INITIAL_STATE
+        state.name = NFA.INITIAL_STATE
         self.add_state(state)
         self.initial_state = state
 
@@ -105,13 +105,13 @@ class NDFA:
     def add_transition(self, from_state: str, to_state: str, terminal: str):
         self.states[from_state].add_transition(terminal, to_state)
 
-    def concat(self, ndfa: NDFA):
-        for state in ndfa.states.values():
-            if state.name == NDFA.INITIAL_STATE:
+    def concat(self, nfa: NFA):
+        for state in nfa.states.values():
+            if state.name == NFA.INITIAL_STATE:
                 continue
 
             self.add_state(state.copy())
-        self.initial_state.concat(ndfa.initial_state)
+        self.initial_state.concat(nfa.initial_state)
 
     def asci_table(self):
         header = ['/']

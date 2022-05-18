@@ -36,7 +36,7 @@ Example:
 python main.py < examples/input.txt
 
 # the output will be
-### NDFA ###
+### NFA ###
 +----+------+------+---+---+---+---+---+---+
 | /  | i    | e    | a | o | u | f | l | s |
 +----+------+------+---+---+---+---+---+---+

@@ -2,15 +2,15 @@
 import unittest
 
 from finite_automaton.dfa import DFA
-from finite_automaton.ndfa import NDFA
+from finite_automaton.nfa import NFA
 
 
 class TestDFA(unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
-        self.ndfa = NDFA()
-        self.ndfa.add_grammar({
+        self.nfa = NFA()
+        self.nfa.add_grammar({
             1: {
                 "productions": { "i": {2, 4}, "a": {4}, "e": {4} },
                 "is_final": False
@@ -36,7 +36,7 @@ class TestDFA(unittest.TestCase):
         self.assertEqual(DFA.index_to_production_name(55), "AD")
 
     def test_merge_productions(self):
-        self.assertEqual(DFA.merge_productions(self.ndfa.states, {2, 4}), {
+        self.assertEqual(DFA.merge_productions(self.nfa.states, {2, 4}), {
             "productions": {"f": {2, 3}, "a": {4}, "e": {4}, "i": {4}},
             "is_final": True,
             "from": {2, 4}
@@ -85,7 +85,7 @@ class TestDFA(unittest.TestCase):
         })
 
     def test_generate_DFA(self):
-        self.assertEqual(DFA.from_NDFA({
+        self.assertEqual(DFA.from_NFA({
             1: { "productions": { "a": {1, 2}, "b": {1} },
                 "is_final": False },
             2: { "productions": { "b": {3} },
