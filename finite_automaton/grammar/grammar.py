@@ -53,6 +53,8 @@ class Grammar:
         return nfa
 
     @classmethod
+    # TODO: Handle epsilon moves
+    # TODO: Handle final tokens
     def NFA_to_DFA(cls, nfa: Grammar) -> Grammar:
         dfa = cls()
 
@@ -61,7 +63,8 @@ class Grammar:
         state_tuple = remap_queue.pop_to_discover()
         while state_tuple:
             state_name, states_to = state_tuple
-            new_state = State(state_name)
+            is_final = any([nfa.states[s].is_final for s in list(states_to)])
+            new_state = State(state_name, is_final)
             dfa.add_state(new_state)
             remap_queue.set_discovered(state_name)
 
