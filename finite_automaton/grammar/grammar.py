@@ -19,13 +19,13 @@ class Grammar:
     def from_token(cls, word: str):
         nfa = cls(GrammarType.DFA)
         
-        state_final = State(word.upper())
+        state_final = State(word.upper(), word.upper())
         last_created_state = state_final
         created = 1
         for letter in reversed(word):
             nfa.add_state(last_created_state)
             name = f"{word.upper()}_{len(word) - created}"
-            state = State(name, False)
+            state = State(name)
             state.add_transition(letter, last_created_state.name)
             last_created_state = state
             
@@ -54,7 +54,6 @@ class Grammar:
 
     @classmethod
     # TODO: Handle epsilon moves
-    # TODO: Handle final tokens
     def NFA_to_DFA(cls, nfa: Grammar) -> Grammar:
         dfa = cls()
 
@@ -63,8 +62,8 @@ class Grammar:
         state_tuple = remap_queue.pop_to_discover()
         while state_tuple:
             state_name, states_to = state_tuple
-            is_final = any([nfa.states[s].is_final for s in list(states_to)])
-            new_state = State(state_name, is_final)
+            final_token = next((nfa.states[s].final_token for s in list(states_to)), None)
+            new_state = State(state_name, final_token)
             dfa.add_state(new_state)
             remap_queue.set_discovered(state_name)
 
@@ -97,7 +96,7 @@ class Grammar:
         return not Grammar.is_expression(raw)
 
     def get_ended_expressions(self):
-        ending_expressions = set([state.name for state in self.states.values() if state.is_final])
+        ending_expressions = set([state.name for state in self.states.values() if state.final_token])
 
         new_ending_found = True
         while (new_ending_found):
@@ -170,9 +169,10 @@ class Grammar:
             for column in header:
                 if column == '/':
                     row.append(
-                    state.name + (
-                        "*" if state.is_final else ""
-                    ))
+                        state.name + (
+                            f"({state.final_token})*" if state.final_token else ""
+                        )
+                    )
                     continue
 
                 try:

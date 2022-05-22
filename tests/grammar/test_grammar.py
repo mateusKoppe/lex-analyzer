@@ -19,11 +19,11 @@ class TestGrammar(unittest.TestCase):
     def test_from_token_else(self):
         nfa = Grammar.from_token("else")
 
-        self.assertFalse(nfa.states["START"].is_final)
-        self.assertFalse(nfa.states["ELSE_1"].is_final)
-        self.assertFalse(nfa.states["ELSE_2"].is_final)
-        self.assertFalse(nfa.states["ELSE_3"].is_final)
-        self.assertTrue(nfa.states["ELSE"].is_final)
+        self.assertIsNone(nfa.states["START"].final_token)
+        self.assertIsNone(nfa.states["ELSE_1"].final_token)
+        self.assertIsNone(nfa.states["ELSE_2"].final_token)
+        self.assertIsNone(nfa.states["ELSE_3"].final_token)
+        self.assertEquals(nfa.states["ELSE"].final_token, "ELSE")
 
         self.assertIn("ELSE_1", nfa.states["START"].transitions["e"])
         self.assertIn("ELSE_2", nfa.states["ELSE_1"].transitions["l"])
@@ -44,8 +44,8 @@ class TestGrammar(unittest.TestCase):
         ])
 
 
-        self.assertFalse(nfa.states["START"].is_final)
-        self.assertTrue(nfa.states["ID"].is_final)
+        self.assertIsNone(nfa.states["START"].final_token)
+        self.assertEqual(nfa.states["ID"].final_token, "ID")
 
         self.assertIn("ID", nfa.states["START"].transitions["a"])
         self.assertIn("ID", nfa.states["START"].transitions["e"])
