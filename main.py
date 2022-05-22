@@ -1,16 +1,18 @@
+import sys
+from time import sleep
 from finite_automaton.grammar import Grammar
 
-def get_inputs():
-    lines = []
-    while True:
-        try:
-            line = input()
-            lines.append(line)
-        except EOFError:
-            break
-    return lines
+try:
+    file_name = sys.argv[1]
+except:
+    print("Missing file_name argument")
+    exit()
 
-
+def get_lines():
+    file = open(file_name, "r")
+    lines = file.readlines()
+    return list(map(lambda line: line[:len(line) - 1], lines))
+    
 def generate_nfa(lines):
     # TODO: first line could be a grammar
     nfa = Grammar.from_token(lines[0])
@@ -36,7 +38,7 @@ def generate_nfa(lines):
 
     return nfa
 
-nfa = generate_nfa(get_inputs())
+nfa = generate_nfa(get_lines())
 
 print("### Grammar ###")
 print(nfa.asci_table())
