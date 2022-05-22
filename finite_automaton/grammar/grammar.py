@@ -1,17 +1,23 @@
 from __future__ import annotations
+import re
 from collections import deque
 from typing import Dict, List
-import re
 from terminaltables import AsciiTable
+from enum import Enum
 
-from finite_automaton.state import State
+from finite_automaton.grammar.state import State
+from finite_automaton.grammar.remap_queue import RemapQueue
 
-class NFA:
+class GrammarType(Enum):
+    NFA = 1
+    DFA = 2
+
+class Grammar:
     INITIAL_STATE = "START"
 
     @classmethod
     def from_token(cls, word: str):
-        nfa = cls()
+        nfa = cls(GrammarType.DFA)
         
         state_final = State(word.upper())
         last_created_state = state_final
@@ -30,7 +36,7 @@ class NFA:
         return nfa
 
     @classmethod
-    def from_grammar(cls, lines: List[str]):
+    def from_raw_grammar(cls, lines: List[str]):
         nfa = cls()
         
         lines_deque = deque(lines)
@@ -45,6 +51,47 @@ class NFA:
         nfa.remove_endless_expressions()
 
         return nfa
+
+    @classmethod
+    def NFA_to_DFA(cls, nfa: Grammar) -> Grammar:
+        dfa = cls()
+
+        remap_queue = RemapQueue()
+        remap_queue.push_to_discovery(nfa.initial_state.name)
+        state_tuple = remap_queue.pop_to_discover()
+        while state_tuple:
+            state_name, states_to = state_tuple
+            new_state = State(state_name)
+            dfa.add_state(new_state)
+            remap_queue.set_discovered(state_name)
+
+            for state_to in list(states_to):
+                state = nfa.states[state_to]
+
+                for terminal, states in state.transitions.items():
+                    is_deterministic = len(states) == 1
+                    if is_deterministic:
+                        transition_state = list(states)[0]
+                        # TODO: This can still cause indeterminism 
+                        new_state.add_transition(terminal, transition_state)
+                        remap_queue.push_to_discovery(transition_state)
+                    else:
+                        maped_state = remap_queue.state_by_merged_states(states)
+                        new_state.add_transition(terminal, maped_state)
+
+            state_tuple = remap_queue.pop_to_discover()
+
+        dfa.initial_state = dfa.states[nfa.initial_state.name]
+        return dfa
+
+    @staticmethod
+    def is_expression(raw):
+        return bool(re.match(State.GRAMMAR_REGEX, raw))      
+
+
+    @staticmethod
+    def is_sentence(raw):
+        return not Grammar.is_expression(raw)
 
     def get_ended_expressions(self):
         ending_expressions = set([state.name for state in self.states.values() if state.is_final])
@@ -64,6 +111,12 @@ class NFA:
 
         return ending_expressions
 
+    def __init__(self, type: GrammarType = None):
+        self.initial_state = None
+        self.states: Dict[str, State] = {} 
+        self.type = GrammarType.NFA
+        if type:
+            self.type = type
 
     def remove_endless_expressions(self):
         states = set(self.states.keys())
@@ -77,22 +130,8 @@ class NFA:
         for state in self.states.values():
             state.forget_state(dead_state)
 
-
-    @staticmethod
-    def is_expression(raw):
-        return bool(re.match(State.GRAMMAR_REGEX, raw))      
-
-
-    @staticmethod
-    def is_sentence(raw):
-        return not NFA.is_expression(raw)
-
-    def __init__(self):
-        self.initial_state = None
-        self.states: Dict[str, State] = {} 
-
     def start_grammar(self, state: State):
-        state.name = NFA.INITIAL_STATE
+        state.name = Grammar.INITIAL_STATE
         self.add_state(state)
         self.initial_state = state
 
@@ -105,9 +144,9 @@ class NFA:
     def add_transition(self, from_state: str, to_state: str, terminal: str):
         self.states[from_state].add_transition(terminal, to_state)
 
-    def concat(self, nfa: NFA):
+    def concat(self, nfa: Grammar):
         for state in nfa.states.values():
-            if state.name == NFA.INITIAL_STATE:
+            if state.name == Grammar.INITIAL_STATE:
                 continue
 
             self.add_state(state.copy())
