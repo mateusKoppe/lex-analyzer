@@ -1,5 +1,5 @@
-from finite_automaton.grammar import Grammar
-from finite_automaton.grammar.state import State
+from lex_analyzer.grammar import Grammar
+from lex_analyzer.grammar.state import State
 
 class Analyzer:
     def __init__(self, grammar: Grammar) -> None:

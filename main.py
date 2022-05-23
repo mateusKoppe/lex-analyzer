@@ -1,7 +1,6 @@
 import sys
-from time import sleep
-from finite_automaton.analyzer import Analyzer
-from finite_automaton.grammar import Grammar
+from lex_analyzer.analyzer import Analyzer
+from lex_analyzer.grammar import Grammar
 
 try:
     file_name = sys.argv[1]

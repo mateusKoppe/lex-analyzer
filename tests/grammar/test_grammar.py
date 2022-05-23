@@ -1,7 +1,7 @@
 import unittest
 
-from finite_automaton.grammar.grammar import Grammar
-from finite_automaton.grammar.state import State
+from lex_analyzer.grammar.grammar import Grammar
+from lex_analyzer.grammar.state import State
 
 
 class TestGrammar(unittest.TestCase):

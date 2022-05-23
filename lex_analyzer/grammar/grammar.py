@@ -5,8 +5,8 @@ from typing import Dict, List
 from terminaltables import AsciiTable
 from enum import Enum
 
-from finite_automaton.grammar.state import State, StateIndeterministicRuleError
-from finite_automaton.grammar.remap_queue import RemapQueue
+from lex_analyzer.grammar.state import State, StateIndeterministicRuleError
+from lex_analyzer.grammar.remap_queue import RemapQueue
 
 class GrammarType(Enum):
     NFA = 1
