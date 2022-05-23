@@ -3,6 +3,9 @@ from os import stat
 from typing import Dict, Set
 import re
 
+class StateIndeterministicRuleError(Exception):
+    pass
+
 class State:
     GRAMMAR_REGEX = r"^<([A-Z_]+)>\s*::=((\s*([a-zε]*)(<([A-Z_]+)>)*([a-zε]*)\s*\|?)+)$"
     TOKEN_REGEX = r"^\s*([a-zε]*)(<([A-Z_]+)>)*([a-zε]*)\s*$"
@@ -33,6 +36,21 @@ class State:
         except KeyError:
             self.transitions[terminal] = { next_state }
 
+    def add_deterministic_transition(self, terminal: str, next_state: str):
+        if terminal in self.transitions:
+            raise StateIndeterministicRuleError(f"transition to {terminal} already determined")
+            
+        self.add_transition(terminal, next_state)
+
+    def set_transition(self, terminal: str, next_state: str):
+        self.transitions[terminal] = { next_state }
+
+    def get_transitions_by(self, terminal: str):
+        try:
+            return self.transitions[terminal]
+        except KeyError:
+            return set()
+
     def forget_state(self, state):
         for transition in self.transitions.values():
             transition.discard(state)
@@ -55,3 +73,9 @@ class State:
             new_state.transitions[terminal] = transition.copy()
 
         return new_state
+
+    def pretty_output(self) -> str:
+        if self.final_token:
+            token_output = "*" if self.name == self.final_token else f"({self.final_token})*"
+            return f"{self.name}{token_output}"
+        return self.name

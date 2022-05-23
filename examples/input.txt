@@ -1,5 +1,5 @@
 if
 else
 
-<ID_START> ::= a<ID> | e<ID> | i<ID> | o<ID> | u<ID>
-<ID> ::= a<ID> | e<ID> | i<ID> | o<ID> | u<ID> | ε
+<ID_START> ::= a<ID> | e<ID> | i<ID> | o<ID> | u<ID> | l<ID>
+<ID> ::= a<ID> | e<ID> | i<ID> | o<ID> | u<ID> | l<ID> | ε

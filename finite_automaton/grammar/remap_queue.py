@@ -36,12 +36,9 @@ class RemapQueue:
 
     def state_by_merged_states(self, states):
         try:
-            map_state = [map_state for map_state, merged_states in self.remap_state.items() if merged_states==states]
-            return map_state[0]
-        except IndexError:
+            return next(map_state for map_state, merged_states in self.remap_state.items() if merged_states==states)
+        except StopIteration:
             deterministic_state = str(self.state_to_create)
-            
-            self.push_to_discovery(deterministic_state, states)
             self.set_remap(deterministic_state, states)
             self.state_to_create += 1
             return deterministic_state
