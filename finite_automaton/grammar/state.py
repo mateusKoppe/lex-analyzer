@@ -51,6 +51,14 @@ class State:
         except KeyError:
             return set()
 
+    def get_deterministic_transitions_by(self, terminal: str):
+        transitions = self.get_transitions_by(terminal)
+        if len(transitions) > 1:
+            raise StateIndeterministicRuleError(f"State {self.name} has indeterminism for terminal {terminal}")
+        elif len(transitions) == 0:
+            return None
+        return transitions.pop()
+
     def forget_state(self, state):
         for transition in self.transitions.values():
             transition.discard(state)

@@ -101,6 +101,7 @@ class Grammar:
         return not Grammar.is_expression(raw)
 
     def __init__(self, type: GrammarType = None):
+        # TODO: Convert initial_state to str
         self.initial_state = None
         self.states: Dict[str, State] = {} 
         self.type = GrammarType.NFA
@@ -164,6 +165,15 @@ class Grammar:
 
             self.add_state(state.copy())
         self.initial_state.concat(nfa.initial_state)
+
+    def get_transition_state(self, state_origin: State, terminal: str) -> State | None:
+        state = state_origin.get_deterministic_transitions_by(terminal)
+        try:
+            return self.states[state]
+        except IndexError:
+            return None
+        except KeyError:
+            return None
 
     def asci_table(self):
         header = ['/']

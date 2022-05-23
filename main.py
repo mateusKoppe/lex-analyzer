@@ -1,16 +1,24 @@
 import sys
 from time import sleep
+from finite_automaton.analyzer import Analyzer
 from finite_automaton.grammar import Grammar
 
 try:
     file_name = sys.argv[1]
 except:
-    print("Missing file_name argument")
+    print("Missing grammar argument")
+    exit()
+
+try:
+    source_file = sys.argv[2]
+except:
+    print("Missing source argument")
     exit()
 
 def get_lines():
     file = open(file_name, "r")
     lines = file.readlines()
+    file.close()
     return list(map(lambda line: line[:len(line) - 1], lines))
     
 def generate_nfa(lines):
@@ -46,3 +54,10 @@ print(nfa.asci_table())
 print("### DFA ###")
 dfa = Grammar.NFA_to_DFA(nfa)
 print(dfa.asci_table())
+
+file = open(source_file, "r")
+input = file.read()
+file.close()
+
+analyzer = Analyzer(dfa)
+print(analyzer.run(input))

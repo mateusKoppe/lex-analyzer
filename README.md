@@ -33,7 +33,7 @@ Grammar example:
 Example:
 ```bash
 # Running using examples/input.txt as input
-python main.py < examples/input.txt
+python main.py examples/input.txt
 
 # the output will be
 ### NFA ###
@@ -63,6 +63,11 @@ python main.py < examples/input.txt
 | H* | G | G | G | G | G | - | B | - |
 | I* | G | G | G | G | G | - | - | D |
 +----+---+---+---+---+---+---+---+---+
+```
+
+Lexical analysis:
+```
+python main.py examples/grammars/input.txt examples/source/source.txt
 ```
 
 ## Testing
