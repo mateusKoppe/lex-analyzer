@@ -74,12 +74,17 @@ class Grammar:
                     is_deterministic = len(states) == 1
                     if is_deterministic:
                         transition_state = list(states)[0]
-                        # TODO: This can still cause indeterminism 
                         new_state.add_transition(terminal, transition_state)
                         remap_queue.push_to_discovery(transition_state)
                     else:
                         maped_state = remap_queue.state_by_merged_states(states)
                         new_state.add_transition(terminal, maped_state)
+
+                    # TODO: This will cause unreachable states
+                    transition_states = new_state.transitions[terminal]
+                    if len(transition_states) >= 2:
+                        state_name = remap_queue.state_by_merged_states(transition_states)
+                        new_state.transitions[terminal] = { state_name }
 
             state_tuple = remap_queue.pop_to_discover()
 

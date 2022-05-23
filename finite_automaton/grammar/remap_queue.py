@@ -14,6 +14,13 @@ class RemapQueue:
 
         if ((state, merged_states) not in self.to_discover) and state not in self.discovered:
             self.to_discover.append((state, merged_states))
+
+    def create_state_to_discovery(self, states_to: set[str]) -> str:
+        state_name = str(self.state_to_create)
+        self.state_to_create += 1
+        self.push_to_discovery(state_name, states_to)
+
+        return state_name
     
     def set_discovered(self, state):
         self.discovered.add(state)
