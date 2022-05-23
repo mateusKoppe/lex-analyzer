@@ -10,7 +10,7 @@ class State:
     @classmethod
     def from_raw(cls, line):
         name = re.search(cls.GRAMMAR_REGEX, line).group(1)
-        state = cls(name, False)
+        state = cls(name)
         productions_raw = re.search(cls.GRAMMAR_REGEX, line).group(2).split("|")
         for raw in productions_raw:
             groups = re.search(cls.TOKEN_REGEX, raw).groups()

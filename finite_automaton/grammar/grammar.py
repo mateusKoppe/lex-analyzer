@@ -62,7 +62,7 @@ class Grammar:
         state_tuple = remap_queue.pop_to_discover()
         while state_tuple:
             state_name, states_to = state_tuple
-            final_token = next((nfa.states[s].final_token for s in list(states_to)), None)
+            final_token = next((nfa.states[s].final_token for s in list(states_to) if nfa.states[s].final_token), None)
             new_state = State(state_name, final_token)
             dfa.add_state(new_state)
             remap_queue.set_discovered(state_name)
