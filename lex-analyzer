@@ -1,0 +1,10 @@
+#!/bin/bash
+SCRIPT_FILE=$(readlink -f "$0")
+SCRIPT_DIR=$(dirname $SCRIPT_FILE)
+
+SOURCE_FILE=$SCRIPT_DIR/venv/bin/activate
+if test -f "$SOURCE_FILE"; then
+    source $SOURCE_FILE
+fi
+
+python $SCRIPT_DIR/main.py "$@"
