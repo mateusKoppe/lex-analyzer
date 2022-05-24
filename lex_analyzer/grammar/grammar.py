@@ -8,49 +8,36 @@ from enum import Enum
 from lex_analyzer.grammar.state import State, StateIndeterministicRuleError
 from lex_analyzer.grammar.remap_queue import RemapQueue
 
+class GrammarInvalidRule(Exception):
+    pass
+
 class GrammarType(Enum):
     NFA = 1
     DFA = 2
 
 class Grammar:
-    INITIAL_STATE = "START"
+    INITIAL_STATE = 0
+    REGEX_RULE = r"(\w+)\s*->\s*(.+)"
 
     @classmethod
-    def from_token(cls, word: str):
-        nfa = cls(GrammarType.DFA)
-        
-        state_final = State(word.upper(), word.upper())
-        last_created_state = state_final
-        created = 1
-        for letter in reversed(word):
-            nfa.add_state(last_created_state)
-            name = f"{word.upper()}_{len(word) - created}"
-            state = State(name)
-            state.add_transition(letter, last_created_state.name)
-            last_created_state = state
+    def from_regex_rule(cls, rule: str) -> Grammar:
+        match = re.search(cls.REGEX_RULE, rule)
+        if not match:
+            raise GrammarInvalidRule(f"rule {rule} is invalid.")
+        token, regex = match.groups()
+        grammar = cls()
+
+        prev = State()
+        grammar.start_grammar(prev)
+        for terminal in regex:
+            state = State()
+            grammar.add_state(state)
+            prev.add_transition(terminal, state)
             
-            created += 1
+            prev = state
 
-        nfa.start_grammar(last_created_state)
-
-        return nfa
-
-    @classmethod
-    def from_raw_grammar(cls, lines: List[str]):
-        nfa = cls()
-        
-        lines_deque = deque(lines)
-
-        initial_state = State.from_raw(lines_deque.popleft())
-        nfa.start_grammar(initial_state)
-
-        for line in lines_deque:
-            state = State.from_raw(line)
-            nfa.add_state(state)
-
-        nfa.remove_endless_expressions()
-
-        return nfa
+        prev.final_token = token
+        return grammar
 
     @classmethod
     # TODO: Handle epsilon moves
@@ -91,24 +78,14 @@ class Grammar:
         dfa.initial_state = dfa.states[nfa.initial_state.name]
         return dfa
 
-    @staticmethod
-    def is_expression(raw):
-        return bool(re.match(State.GRAMMAR_REGEX, raw))      
-
-
-    @staticmethod
-    def is_sentence(raw):
-        return not Grammar.is_expression(raw)
-
-    def __init__(self, type: GrammarType = None):
+    def __init__(self, type: GrammarType = GrammarType.NFA):
         # TODO: Convert initial_state to str
         self.initial_state = None
-        self.states: Dict[str, State] = {} 
-        self.type = GrammarType.NFA
-        if type:
-            self.type = type
+        self.states: Dict[int, State] = {} 
+        self.type = type
+        self.next_state_name = 1
 
-    def get_final_token(self, state_name: str) -> str:
+    def get_final_token(self, state_name: int) -> str | None:
         try:
             return self.states[state_name].final_token
         except KeyError:
@@ -139,8 +116,8 @@ class Grammar:
         for dead_state in dead_states:
             self.forget_state(dead_state)
 
-    def forget_state(self, dead_state: str):
-        del self.states[dead_state]
+    def forget_state(self, dead_state: State):
+        del self.states[dead_state.name]
         for state in self.states.values():
             state.forget_state(dead_state)
 
@@ -153,17 +130,24 @@ class Grammar:
         if state.name in self.states:
             raise Exception(f"State {state.name} already exist")
 
+        if state.name is None:
+            state.name = self.next_state_name
+            self.next_state_name += 1
+
         self.states[state.name] = state
 
-    def add_transition(self, from_state: str, to_state: str, terminal: str):
-        self.states[from_state].add_transition(terminal, to_state)
+    def add_transition(self, from_state: State, to_state: State, terminal: str):
+        from_state.add_transition(terminal, to_state)
 
     def concat(self, nfa: Grammar):
+        # TODO: Fix this states as int
         for state in nfa.states.values():
             if state.name == Grammar.INITIAL_STATE:
                 continue
 
-            self.add_state(state.copy())
+            copied_state = state.copy()
+            copied_state.name = None
+            self.add_state(copied_state)
         self.initial_state.concat(nfa.initial_state)
 
     def get_transition_state(self, state_origin: State, terminal: str) -> State | None:

@@ -1,6 +1,3 @@
-if
-else
-comma
-
-<ID_START> ::= a<ID> | e<ID> | i<ID> | o<ID> | u<ID> | l<ID>
-<ID> ::= a<ID> | e<ID> | i<ID> | o<ID> | u<ID> | l<ID> | ε
+IF    -> if
+ELSE  -> else
+COMMA -> ;

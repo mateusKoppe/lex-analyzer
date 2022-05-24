@@ -25,16 +25,16 @@ class State:
 
         return state
 
-    def __init__(self, name: str, final_token: str = None) -> None:
+    def __init__(self, name: int = None, final_token: str = None) -> None:
         self.name = name
         self.final_token = final_token
-        self.transitions: Dict[str, Set[str]] = {}
+        self.transitions: Dict[str, Set[int]] = {}
 
-    def add_transition(self, terminal: str, next_state: str):
+    def add_transition(self, terminal: str, state: State):
         try:
-            self.transitions[terminal].add(next_state)
+            self.transitions[terminal].add(state.name)
         except KeyError:
-            self.transitions[terminal] = { next_state }
+            self.transitions[terminal] = { state.name }
 
     def add_deterministic_transition(self, terminal: str, next_state: str):
         if terminal in self.transitions:
@@ -59,9 +59,9 @@ class State:
             return None
         return transitions.pop()
 
-    def forget_state(self, state):
+    def forget_state(self, state: State):
         for transition in self.transitions.values():
-            transition.discard(state)
+            transition.discard(state.name)
 
     def concat(self, state: State):
         if self.name != state.name:
