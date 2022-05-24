@@ -114,6 +114,6 @@ class TestGrammar(unittest.TestCase):
         self.assertEquals(self.if_gr.initial_state.get_transitions_by("i"), { 1 })
         self.assertEquals(self.if_gr.initial_state.get_transitions_by("f"), { 3 })
 
-        self.assertEquals(self.if_gr.get_final_token(5), "FI")
+        self.assertEquals(self.if_gr.get_final_token(4), "FI")
 
 

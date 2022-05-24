@@ -1,3 +1,2 @@
 IF    -> if
-ELSE  -> else
-COMMA -> ;
+FI    -> fi

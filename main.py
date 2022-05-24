@@ -24,7 +24,7 @@ def generate_nfa(lines):
     # TODO: first line could be a grammar
     nfa = Grammar()
     for line in lines:
-        nfa.concat(Grammar.from_regex_rule())
+        nfa.concat(Grammar.from_regex_rule(line))
 
     return nfa
 

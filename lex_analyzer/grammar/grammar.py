@@ -40,7 +40,7 @@ class Grammar:
         return grammar
 
     @classmethod
-    # TODO: Handle epsilon moves
+    # TODO: Refactor NFA
     def NFA_to_DFA(cls, nfa: Grammar) -> Grammar:
         dfa = cls()
 
@@ -140,15 +140,28 @@ class Grammar:
         from_state.add_transition(terminal, to_state)
 
     def concat(self, nfa: Grammar):
-        # TODO: Fix this states as int
+        copied_initial_state = nfa.initial_state.copy()
+
+        if not self.initial_state:
+            self.start_grammar(copied_initial_state)
+
+        added_states = [copied_initial_state]
+        rename_rules = {}
+
         for state in nfa.states.values():
             if state.name == Grammar.INITIAL_STATE:
                 continue
 
             copied_state = state.copy()
             copied_state.name = None
+            added_states.append(copied_state)
             self.add_state(copied_state)
-        self.initial_state.concat(nfa.initial_state)
+            rename_rules[state.name] = copied_state.name
+
+        for state in added_states:
+            state.rename_states(rename_rules)
+
+        self.initial_state.concat(copied_initial_state)
 
     def get_transition_state(self, state_origin: State, terminal: str) -> State | None:
         state = state_origin.get_deterministic_transitions_by(terminal)
@@ -177,7 +190,7 @@ class Grammar:
                     continue
 
                 try:
-                    row.append(", ".join(state.transitions[column]))
+                    row.append(", ".join(map(str, state.transitions[column])))
                 except KeyError:
                     row.append('-')
             rows.append(row)

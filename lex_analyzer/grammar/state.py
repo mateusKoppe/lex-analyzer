@@ -82,8 +82,13 @@ class State:
 
         return new_state
 
+    def rename_states(self, rename_map: Dict[int, int]):
+        for terminal, transition in self.transitions.items():
+            remaped = [rename_map.get(i, i) for i in list(transition)]
+            self.transitions[terminal] = set(remaped)
+
     def pretty_output(self) -> str:
         if self.final_token:
-            token_output = "*" if self.name == self.final_token else f"({self.final_token})*"
-            return f"{self.name}{token_output}"
-        return self.name
+            token_output = "*" if str(self.name) == self.final_token else f"({self.final_token})*"
+            return f"{str(self.name)}{token_output}"
+        return str(self.name)
