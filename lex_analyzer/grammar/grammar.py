@@ -38,44 +38,58 @@ class Grammar:
 
         prev.final_token = token
         return grammar
-
+    
     @classmethod
-    # TODO: Refactor NFA
     def NFA_to_DFA(cls, nfa: Grammar) -> Grammar:
         dfa = cls()
+        dfa.next_state_name = 0
+        
+        remap_table: Dict[int, set[int]] = {}
 
-        remap_queue = RemapQueue()
-        remap_queue.push_to_discovery(nfa.initial_state.name)
-        state_tuple = remap_queue.pop_to_discover()
-        while state_tuple:
-            state_name, states_to = state_tuple
-            final_token = next((nfa.get_final_token(s) for s in list(states_to) if nfa.get_final_token(s)), None)
-            new_state = State(state_name, final_token)
-            dfa.add_state(new_state)
-            remap_queue.set_discovered(state_name)
+        dfa.initial_state = dfa.create_state()
+        dfa.initial_state.final_token = nfa.initial_state.final_token
 
-            for state_to in list(states_to):
-                state = nfa.states[state_to]
+        remap_table[dfa.initial_state.name] = { nfa.initial_state.name }
+        to_discovery: list[State] = [ dfa.initial_state ]
 
-                for terminal, states in state.transitions.items():
-                    is_deterministic = len(states) == 1
-                    state_to_map = list(states)[0]
+        while True:
+            try:
+                discovering_state = to_discovery.pop(0)
+            except IndexError:
+                break
+
+            discovering_states = remap_table[discovering_state.name]
+            discovering_state.final_token = next((nfa.get_final_token(s) for s in list(discovering_states) if nfa.get_final_token(s)), None)
+
+            for discovering in discovering_states:
+                for terminal, transition_to in nfa.states[discovering].transitions.items():
                     try:
-                        if not is_deterministic:
-                            state_to_map = remap_queue.state_by_merged_states(states)
-                                                        
-                        new_state.add_deterministic_transition(terminal, state_to_map)
-                        remap_queue.push_to_discovery(state_to_map, states)
+                        remaped_name = next(s for s, c in remap_table.items() if c == transition_to)
+                        remaped_state = dfa.states[remaped_name]
+                    except StopIteration:
+                        remaped_state = dfa.create_state()
+                        remap_table[remaped_state.name] = transition_to
+                        to_discovery.append(remaped_state)
+
+                    try:
+                        discovering_state.add_deterministic_transition(terminal, remaped_state)
                     except StateIndeterministicRuleError:
-                        transition_states = new_state.get_transitions_by(terminal)
-                        next_states = transition_states.union({ state_to_map })
-                        state_to_map = remap_queue.state_by_merged_states(next_states)
-                        new_state.set_transition(terminal, state_to_map)
-                        remap_queue.push_to_discovery(state_to_map, next_states)
+                        # TODO: This generate unacessible states
+                        remaped_transitions_states = discovering_state.get_transitions_by(terminal)
+                        remaped_transitions_states = remaped_transitions_states.union({ remaped_state.name })
+                        transition_states = set()
+                        for remaped_state in remaped_transitions_states:
+                            transition_states = remap_table[remaped_state].union(transition_states)
 
-            state_tuple = remap_queue.pop_to_discover()
+                        try:
+                            remaped_state = next((s for s, c in remap_table.items() if c == transition_states))
+                        except StopIteration:
+                            remaped_state = dfa.create_state()
+                            remap_table[remaped_state.name] = transition_states
+                            to_discovery.append(remaped_state)
 
-        dfa.initial_state = dfa.states[nfa.initial_state.name]
+                        discovering_state.set_transition(terminal, { remaped_state.name })
+                        
         return dfa
 
     def __init__(self, type: GrammarType = GrammarType.NFA):
@@ -135,6 +149,12 @@ class Grammar:
             self.next_state_name += 1
 
         self.states[state.name] = state
+
+    def create_state(self):
+        state = State(self.next_state_name)
+        self.next_state_name += 1
+        self.add_state(state)
+        return state
 
     def add_transition(self, from_state: State, to_state: State, terminal: str):
         from_state.add_transition(terminal, to_state)

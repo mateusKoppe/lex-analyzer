@@ -36,14 +36,15 @@ class State:
         except KeyError:
             self.transitions[terminal] = { state.name }
 
-    def add_deterministic_transition(self, terminal: str, next_state: str):
+    def add_deterministic_transition(self, terminal: str, next_state: State):
+        # TODO: check if this rule is right, maybe a terminal can exist without any key
         if terminal in self.transitions:
             raise StateIndeterministicRuleError(f"transition to {terminal} already determined")
             
         self.add_transition(terminal, next_state)
 
-    def set_transition(self, terminal: str, next_state: str):
-        self.transitions[terminal] = { next_state }
+    def set_transition(self, terminal: str, next_state: set[str]):
+        self.transitions[terminal] = next_state
 
     def get_transitions_by(self, terminal: str):
         try:
