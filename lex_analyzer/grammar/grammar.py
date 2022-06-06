@@ -17,7 +17,7 @@ class GrammarType(Enum):
 
 class Grammar:
     INITIAL_STATE = 0
-    REGEX_RULE = r"(\w+)\s*->\s*(.+)"
+    REGEX_RULE = r"(\w+)\s*->\s*(.+)\n?"
 
     @classmethod
     def from_regex_rule(cls, rule: str) -> Grammar:

@@ -7,23 +7,6 @@ class StateIndeterministicRuleError(Exception):
     pass
 
 class State:
-    GRAMMAR_REGEX = r"^<([A-Z_]+)>\s*::=((\s*([a-zε]*)(<([A-Z_]+)>)*([a-zε]*)\s*\|?)+)$"
-    TOKEN_REGEX = r"^\s*([a-zε]*)(<([A-Z_]+)>)*([a-zε]*)\s*$"
-
-    @classmethod
-    def from_raw(cls, line):
-        name = re.search(cls.GRAMMAR_REGEX, line).group(1)
-        state = cls(name)
-        productions_raw = re.search(cls.GRAMMAR_REGEX, line).group(2).split("|")
-        for raw in productions_raw:
-            groups = re.search(cls.TOKEN_REGEX, raw).groups()
-            if (groups[0] == "ε"):
-                state.final_token = state.name
-                continue
-
-            state.add_transition(groups[0], groups[2])
-
-        return state
 
     def __init__(self, name: int = None, final_token: str = None) -> None:
         self.name = name
@@ -58,7 +41,7 @@ class State:
             raise StateIndeterministicRuleError(f"State {self.name} has indeterminism for terminal {terminal}")
         elif len(transitions) == 0:
             return None
-        return transitions.pop()
+        return list(transitions)[0]
 
     def forget_state(self, state: State):
         for transition in self.transitions.values():

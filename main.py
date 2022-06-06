@@ -18,7 +18,7 @@ def get_lines():
     file = open(file_name, "r")
     lines = file.readlines()
     file.close()
-    return list(map(lambda line: line[:len(line) - 1], lines))
+    return lines
     
 def generate_nfa(lines):
     # TODO: first line could be a grammar
