@@ -43,9 +43,9 @@ class State:
             return None
         return list(transitions)[0]
 
-    def forget_state(self, state: State):
+    def forget_state(self, state: int):
         for transition in self.transitions.values():
-            transition.discard(state.name)
+            transition.discard(state)
 
     def concat(self, state: State):
         if self.name != state.name:

@@ -65,7 +65,7 @@ class TestGrammar(unittest.TestCase):
 
         self.if_gr.add_transition(self.if_gr.states[0], state, "o")
         self.if_gr.add_transition(self.if_gr.states[2], state, "o")
-        self.if_gr.forget_state(state)
+        self.if_gr.forget_state(state.name)
 
         self.assertNotIn(state.name, self.if_gr.states)
         self.assertNotIn(state.name, self.if_gr.states[0].transitions["o"])

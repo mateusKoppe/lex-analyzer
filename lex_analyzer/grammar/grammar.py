@@ -130,8 +130,8 @@ class Grammar:
         for dead_state in dead_states:
             self.forget_state(dead_state)
 
-    def forget_state(self, dead_state: State):
-        del self.states[dead_state.name]
+    def forget_state(self, dead_state: int):
+        del self.states[dead_state]
         for state in self.states.values():
             state.forget_state(dead_state)
 
