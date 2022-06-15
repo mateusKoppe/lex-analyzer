@@ -216,3 +216,35 @@ class Grammar:
             rows.append(row)
 
         return AsciiTable(rows).table
+
+    def set_follow(self, follow_grammar: Grammar) -> None:
+        remap_states: Dict[int, State] = {}
+        initial_follow = follow_grammar.initial_state
+
+        final_states = [state for state in self.states.values() if state.final_token]
+
+        # Add states
+        for state in follow_grammar.states.values():
+            if state == initial_follow:
+                continue
+
+            new_state = self.create_state()
+            new_state.final_token = state.final_token
+            remap_states[state.name] = new_state
+
+        # Remap transitions
+        for state in follow_grammar.states.values():
+            if state == initial_follow:
+                continue
+
+            for terminal, transitions in state.transitions.items():
+                for transition in list(transitions):
+                    remaped = remap_states[state.name]
+                    remaped.add_transition(terminal, remap_states[transition])
+
+        # final state to the new follow state
+        for final_state in final_states:
+            final_state.final_token = None
+            for terminal, transitions in initial_follow.transitions.items():
+                for transition in list(transitions):
+                    final_state.add_transition(terminal, remap_states[transition])

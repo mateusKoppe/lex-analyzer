@@ -17,15 +17,18 @@ class TestGrammar(unittest.TestCase):
 
         self.assertIsNone(grammar.states[0].final_token)
         self.assertIsNone(grammar.states[1].final_token)
-        self.assertEquals(grammar.states[2].final_token, "IF")
+        self.assertEquals(grammar.states[2].final_token, "IF",
+            "assert the final token is the one described")
 
         self.assertEqual(grammar.states[0].transitions["i"], { 1 })
         self.assertEqual(grammar.states[1].transitions["f"], { 2 })
-        self.assertEqual(grammar.states[2].transitions, {})
+        self.assertEqual(grammar.states[2].transitions, {},
+            "assert the final state is empty")
 
         self.assertEqual(
             grammar.initial_state,
-            grammar.states[0]
+            grammar.states[0],
+            "assert the initial state is the same as the 0"
         )
 
     def test_get_ended_expressions(self):
@@ -116,4 +119,14 @@ class TestGrammar(unittest.TestCase):
 
         self.assertEquals(self.if_gr.get_final_token(4), "FI")
 
+    def test_set_follow(self):
+        el_gr = Grammar.from_regex_rule("ELSEIF -> el")
 
+        grammar = self.if_gr
+        grammar.set_follow(el_gr)
+
+        self.assertIsNone(grammar.states[2].final_token)
+        self.assertEquals(grammar.states[2].get_transitions_by("e"), { 3 })
+        self.assertEquals(grammar.states[3].get_transitions_by("l"), { 4 })
+        self.assertEquals(grammar.states[4].final_token, "ELSEIF",
+            "assert the final token is the one described")
