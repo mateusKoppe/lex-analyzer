@@ -12,7 +12,7 @@ class TestGrammar(unittest.TestCase):
 
         self.if_gr = Grammar.from_regex_rule("IF -> if")
 
-    def test_from_regex_rule(self):
+    def test_from_regex_rule_simple(self):
         grammar = Grammar.from_regex_rule("IF -> if")
 
         self.assertIsNone(grammar.states[0].final_token)
@@ -30,6 +30,30 @@ class TestGrammar(unittest.TestCase):
             grammar.states[0],
             "assert the initial state is the same as the 0"
         )
+
+    def test_from_regex_rule_options(self):
+        grammar = Grammar.from_regex_rule("AB -> [ab]")
+
+        self.assertIsNone(grammar.states[0].final_token)
+        self.assertEquals(grammar.states[1].final_token, "AB",
+            "assert the final token is the one described")
+
+        # Assert both the transitiosn were created
+        self.assertEqual(grammar.states[0].transitions["a"], { 1 })
+        self.assertEqual(grammar.states[0].transitions["b"], { 1 })
+        self.assertEqual(grammar.states[1].transitions, {},
+            "assert the final state is empty")
+
+        self.assertEqual(
+            grammar.initial_state,
+            grammar.states[0],
+            "assert the initial state is the same as the 0"
+        )
+
+    def test_simplify_regex_rule(self):
+        rule = "[ab]"
+        simplified_rule = Grammar.simplify_regex_rule(rule)
+        self.assertEqual(simplified_rule, "(a|b)")
 
     def test_get_ended_expressions(self):
         dead_state = State()

@@ -15,6 +15,11 @@ class GrammarType(Enum):
     NFA = 1
     DFA = 2
 
+class RegexBufferType(Enum):
+    SINGLE = 1
+    GROUP_DIGEST = 2
+    GROUP_FINISH = 3
+
 class Grammar:
     INITIAL_STATE = 0
     REGEX_RULE = r"(\w+)\s*->\s*(.+)\n?"
@@ -25,19 +30,63 @@ class Grammar:
         if not match:
             raise GrammarInvalidRule(f"rule {rule} is invalid.")
         token, regex = match.groups()
+        regex = Grammar.simplify_regex_rule(regex)
+
         grammar = cls()
 
         prev = State()
         grammar.start_grammar(prev)
-        for terminal in regex:
-            state = State()
-            grammar.add_state(state)
-            prev.add_transition(terminal, state)
+
+        buffer_type = RegexBufferType.SINGLE
+        buffer = ""
+
+        for char in regex:
+            if char == "(":
+                buffer_type = RegexBufferType.GROUP_DIGEST
+                continue
             
-            prev = state
+            if char == ")":
+                buffer_type = RegexBufferType.GROUP_FINISH
+
+            if buffer_type == RegexBufferType.SINGLE:
+                state = State()
+                grammar.add_state(state)
+                prev.add_transition(char, state)
+                
+                prev = state
+
+            if buffer_type == RegexBufferType.GROUP_DIGEST:
+                buffer += char
+
+            if buffer_type == RegexBufferType.GROUP_FINISH:
+                group_grammars = Grammar.handle_regex_group(f"{token} -> {buffer}")
+                for group_grammar in group_grammars:
+                    grammar.set_follow(group_grammar)
+                    
+                buffer = ""
+                buffer_type = RegexBufferType.SINGLE
 
         prev.final_token = token
         return grammar
+
+    @classmethod
+    def handle_regex_group(cls, rule: str) -> List[Grammar]:
+        match = re.search(cls.REGEX_RULE, rule)
+        token, regex = match.groups()
+
+        grammars = []
+        groups_regex = regex.split("|")
+        for regex in groups_regex:
+            grammar = Grammar.from_regex_rule(f"{token} -> {regex}")
+            grammars.append(grammar)
+
+        return grammars
+
+    @staticmethod
+    def simplify_regex_rule(regex: str) -> str:
+        reg_brackets = r"\[(.*)\]"
+        regex = re.sub(reg_brackets, lambda s: f"({'|'.join(s.group(1))})", regex)
+        return regex
     
     @classmethod
     def NFA_to_DFA(cls, nfa: Grammar) -> Grammar:
